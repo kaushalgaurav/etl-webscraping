@@ -1,0 +1,199 @@
+indicator	variable	programme	grouping
+Total number of pregnant women Registered for ANC	anc_reg	Maternal Health	RMNCH+A
+Number of Pregnant women registered within first trimester	anc_reg_1st_tri	Maternal Health	RMNCH+A
+% 1st Trimester registration to Total ANC Registrations	pct_anc_1st_tri	Maternal Health	RMNCH+A
+Number of pregnant women received 4 or more ANC check ups	anc_4plus	Maternal Health	RMNCH+A
+TT2 given to Pregnant women (numbers)	tt2	Maternal Health	RMNCH+A
+TT Booster given to Pregnant women (numbers)	tt_booster	Maternal Health	RMNCH+A
+% Pregnant Woman received 4 ANC check ups to Total ANC Registrations	pct_anc_4plus	Maternal Health	RMNCH+A
+% Pregnant women received TT2+ TT Booster to Total ANC Registration	pct_tt2_booster	Maternal Health	RMNCH+A
+Number of Pregnant women given 180 IFA tablets	ifa_180	Maternal Health	RMNCH+A
+% Pregnant women given 180 IFA to Total ANC Registration	pct_ifa_180	Maternal Health	RMNCH+A
+Number of Pregnant Women having Hb level<11 (tested cases)	hb_lt11	Maternal Health	RMNCH+A
+Number of Pregnant Women having severe anaemia (Hb<7) treated at institution	severe_anaemia_treated	Maternal Health	RMNCH+A
+% Pregnant women having severe anaemia (Hb<7) treated at institution to women having hb level<7	pct_severe_anaemia_treated	Maternal Health	RMNCH+A
+% New cases of Pregnant Women detected at institution for hypertension to Total ANC Registrations	pct_hypertension_new	Maternal Health	RMNCH+A
+Number of Home deliveries	home_del	Maternal Health	RMNCH+A
+Number of home deliveries attended by SBA trained (Doctor/Nurse/ANM)	home_del_sba	Maternal Health	RMNCH+A
+Number of home deliveries attended by Non SBA trained (trained TB/Dai)	home_del_non_sba	Maternal Health	RMNCH+A
+% SBA attended home deliveries to Total Reported Home Deliveries	pct_home_del_sba	Maternal Health	RMNCH+A
+Deliveries Conducted at Public Institutions	del_public	Maternal Health	RMNCH+A
+Number of Women Discharged under 48 hours of delivery in public facilities	discharge_lt48h_public	Maternal Health	RMNCH+A
+% Women discharged in less than 48 hours of delivery to Total Reported Deliveries at public institutions	pct_discharge_lt48h_public	Maternal Health	RMNCH+A
+Deliveries Conducted at Private Institutions	del_pvt	Maternal Health	RMNCH+A
+Number of Women Discharged under 48 hours of delivery in private institutions	discharge_lt48h_pvt	Maternal Health	RMNCH+A
+% Women discharged in less than 48 hours of delivery to Total Reported Deliveries at private institutions	pct_discharge_lt48h_pvt	Maternal Health	RMNCH+A
+Institutional deliveries (Public Insts.+Pvt. Insts.)	inst_del	Maternal Health	RMNCH+A
+% Institutional Deliveries to total ANC registration	pct_inst_del_anc	Maternal Health	RMNCH+A
+Total reported deliveries	total_del	Maternal Health	RMNCH+A
+% Institutional deliveries to Total Reported Deliveries	pct_inst_del	Maternal Health	RMNCH+A
+% Safe deliveries to Total Reported Deliveries	pct_safe_del	Maternal Health	RMNCH+A
+% Home deliveries to Total Reported Deliveries	pct_home_del	Maternal Health	RMNCH+A
+Number of C-section deliveries conducted at public facilities	csec_public	Maternal Health	RMNCH+A
+Number of C-section deliveries conducted at private facilities	csec_pvt	Maternal Health	RMNCH+A
+% C-section deliveries (Public + Pvt.) to reported institutional (Public + Pvt.) deliveries	pct_csec	Maternal Health	RMNCH+A
+% C-sections conducted at public facilities to Deliveries conducted at public facilities	pct_csec_public	Maternal Health	RMNCH+A
+% C-sections conducted at Private facilities to Deliveries conducted at private facilities	pct_csec_pvt	Maternal Health	RMNCH+A
+% Deliveries conducted at Public Institutions to Total Institutional Deliveries	pct_del_public	Maternal Health	RMNCH+A
+% Deliveries conducted at Private Institutions to Total Institutional Deliveries	pct_del_pvt	Maternal Health	RMNCH+A
+Women received 1st post partum check-up within 48 hours of home delivery	pnc_48h_home	Maternal Health	RMNCH+A
+Women received 1st post partum check up between 48 hours and 14 days	pnc_48h_14d	Maternal Health	RMNCH+A
+% Women getting 1st post partum check-up within 48 hours of home delivery to Total Reported Home Deliveries	pct_pnc_48h_home	Maternal Health	RMNCH+A
+% Women getting 1st Post Partum Checkup between 48 hours and 14 days to Total Reported Deliveries	pct_pnc_48h_14d	Maternal Health	RMNCH+A
+Total Number of reported live births	live_births	Maternal Health	RMNCH+A
+% Live Births to Total Deliveries	pct_live_births_del	Maternal Health	RMNCH+A
+Total Number of reported Still Births	still_births	Maternal Health	RMNCH+A
+% live birth to Reported Birth	pct_live_births	Maternal Health	RMNCH+A
+Number of Newborns weighed at birth	nb_weighed	Child Health	RMNCH+A
+% Newborns weighed at birth to live birth	pct_nb_weighed	Child Health	RMNCH+A
+Number of Newborns having weight less than 2.5 kg	lbw	Child Health	RMNCH+A
+% Newborns having weight less than 2.5 kg to Newborns weighed at birth	pct_lbw	Child Health	RMNCH+A
+Number of New Borns Breast Fed within 1 hour	bf_1hr	Child Health	RMNCH+A
+% Newborns breast fed within 1 hour of birth to Total live birth	pct_bf_1hr	Child Health	RMNCH+A
+Sex Ratio at birth ( Female Live Births/ Male Live Births *1000)	sex_ratio_birth	PC&PNDT	RMNCH+A
+% cases of Pregnant women with Obstetric Complications and attended to reported deliveries	pct_obs_comp	Maternal Health	RMNCH+A
+% Complicated Pregnancies treated with Blood Transfusion to Total Women with Obstetric Complications attended	pct_obs_comp_blood_trans	Maternal Health	RMNCH+A
+Number of PW given 360 Calcium tablets	calcium_360	Maternal Health	RMNCH+A
+% Pregnant women given 360 Calcium to Total ANC Registration	pct_calcium_360	Maternal Health	RMNCH+A
+Number of PW given one Albendazole tablet after 1st trimester	albendazole	Maternal Health	RMNCH+A
+% Pregnant women given one Albendazole tablet after 1st trimester to Total ANC Registration	pct_albendazole	Maternal Health	RMNCH+A
+Number of PW tested for blood sugar using OGTT (Oral Glucose Tolerance Test)	ogtt_tested	Maternal Health	RMNCH+A
+% Pregnant women tested for blood sugar using OGTT to Total ANC Registration	pct_ogtt_tested	Maternal Health	RMNCH+A
+Number of PW tested positive for GDM	gdm_pos	Maternal Health	RMNCH+A
+% Pregnant women tested positive for GDM to Total ANC Registration	pct_gdm_pos	Maternal Health	RMNCH+A
+Number of pregnant women tested for Syphilis	syphilis_tested	National AIDS Control Programme	Communicable Diseases
+Number of pregnant women tested found sero positive for Syphilis	syphilis_pos	National AIDS Control Programme	Communicable Diseases
+% Pregnant women tested for Syphilis to Total ANC Registration	pct_syphilis_tested	National AIDS Control Programme	Communicable Diseases
+% Pregnant women treatd for Syphilis to Total sero positive for Syphilis	pct_syphilis_treated	National AIDS Control Programme	Communicable Diseases
+% of babies treated for congenital Syphilis to babies total diagnosed with Congenital Syphilis	pct_cong_syphilis_treated	National AIDS Control Programme	Communicable Diseases
+Total no. maternal deaths	maternal_deaths	Maternal Health	RMNCH+A
+Total Facility Based Maternal Death Reviews (FBMDR) done	fbmdr	Maternal Health	RMNCH+A
+Total Number of Abortions ( Spontaneous) Reported	abortions_spont	Maternal Health – Comprehensive Abortion Care	RMNCH+A
+Total Number of MTPs ( Public) conducted	mtp_public	Maternal Health – Comprehensive Abortion Care	RMNCH+A
+% MTPs to total Abortions	pct_mtp_abortions	Maternal Health – Comprehensive Abortion Care	RMNCH+A
+% MTPs up to 12 weeks of Pregnancy to Total MTPs at Public Institutions	pct_mtp_le12w	Maternal Health – Comprehensive Abortion Care	RMNCH+A
+% MTPs more than 12 weeks of Pregnancy to Total MTPs at Public Institutions	pct_mtp_gt12w	Maternal Health – Comprehensive Abortion Care	RMNCH+A
+% MTPs Conducted at Public Institutions to Total MTPs	pct_mtp_public	Maternal Health – Comprehensive Abortion Care	RMNCH+A
+% MTPs Conducted at Private Institutions to Total MTPs	pct_mtp_pvt	Maternal Health – Comprehensive Abortion Care	RMNCH+A
+% Total MTPs (Public) Conducted to Total ANC Registration	pct_mtp_public_anc	Maternal Health – Comprehensive Abortion Care	RMNCH+A
+Number of Vasectomies Conducted	vasectomy	Family Planning	RMNCH+A
+Number of Tubectomies Conducted	tubectomy	Family Planning	RMNCH+A
+Total Sterilisation Conducted	steril_total	Family Planning	RMNCH+A
+% Male Sterlisation (Vasectomies) to Total sterilisation	pct_vasectomy	Family Planning	RMNCH+A
+% Female Serlisation (Tubectomies) to Total sterilisation	pct_tubectomy	Family Planning	RMNCH+A
+Total Sterlisation (Tubectomies and Vasectomies) conducted at PHC	steril_phc	Family Planning	RMNCH+A
+Total Sterlisation (Tubectomies and Vasectomies) conducted at CHC	steril_chc	Family Planning	RMNCH+A
+Total Sterlisation (Tubectomies and Vasectomies) conducted at SDH	steril_sdh	Family Planning	RMNCH+A
+Total Sterlisation (Tubectomies and Vasectomies) conducted at DH	steril_dh	Family Planning	RMNCH+A
+Total Sterlisation (Tubectomies and Vasectomies) conducted at Private institutions	steril_pvt	Family Planning	RMNCH+A
+Total Sterlisation (Tubectomies and Vasectomies) conducted at Public institutions	steril_public	Family Planning	RMNCH+A
+% Total Sterilisation (Tubectomies and Vasectomies) conducted at Private institutions to Total Sterlisation	pct_steril_pvt	Family Planning	RMNCH+A
+% Total Sterilisation (Tubectomies and Vasectomies) conducted at Public institutions to Total Sterlisation	pct_steril_public	Family Planning	RMNCH+A
+% Laparoscopic sterlisations to Total Female Sterilisations	pct_lap_steril	Family Planning	RMNCH+A
+% Mini Lap Sterlisations to Total Female Sterilisations	pct_minilap_steril	Family Planning	RMNCH+A
+% Post Partum Sterlisations to Total Female Sterilisations	pct_pp_steril	Family Planning	RMNCH+A
+% Post Abortion Sterlisations to Total Female Sterilisations	pct_pa_steril	Family Planning	RMNCH+A
+% Laparoscopic sterlisations at Public Institutions to Total Laparoscopic Sterilisations	pct_lap_steril_public	Family Planning	RMNCH+A
+% Mini Lap sterlisations at Public Institutions to Total Mini Lap Sterilisations	pct_minilap_steril_public	Family Planning	RMNCH+A
+% Post Partum sterlisations at Public Institutions to Total Post Partum Sterilisation	pct_pp_steril_public	Family Planning	RMNCH+A
+% Post Abortion sterlisations at Public Institutions to Total Post Partum Sterilisation	pct_pa_steril_public	Family Planning	RMNCH+A
+Total cases of deaths following Sterlisation ( Male + Female)	steril_deaths	Family Planning	RMNCH+A
+Total cases of deaths following Male Sterlisation	steril_deaths_male	Family Planning	RMNCH+A
+Total cases of deaths following Female Sterlisation	steril_deaths_female	Family Planning	RMNCH+A
+Total cases of failure following Male Sterlisation	steril_fail_male	Family Planning	RMNCH+A
+Total cases of failure following Female Sterlisation	steril_fail_female	Family Planning	RMNCH+A
+Total cases of complication following Male Sterlisation	steril_comp_male	Family Planning	RMNCH+A
+Total cases of complication following Female Sterlisation	steril_comp_female	Family Planning	RMNCH+A
+IUCD Insertions done (public facilities)	iucd_public	Family Planning	RMNCH+A
+IUCD insertions done (pvt. facilities)	iucd_pvt	Family Planning	RMNCH+A
+% PP IUCD Insertions (public) to Total IUCD Insertions (public)	pct_ppiucd_iucd_public	Family Planning	RMNCH+A
+% PP IUCD Insertions (public) to Total Institutional Deliveries (public)	pct_ppiucd_del_public	Family Planning	RMNCH+A
+% IUCD insertions to all family planning methods ( IUCD plus permanent)	pct_iucd_fp	Family Planning	RMNCH+A
+Total Interval IUCD Insertions done	iucd_interval	Family Planning	RMNCH+A
+Total PP IUCD Insertions done	ppiucd	Family Planning	RMNCH+A
+Total PAIUCD insertions done	paiucd	Family Planning	RMNCH+A
+Combined Oral Pills distributed	ocp	Family Planning	RMNCH+A
+Emergency pills distributed	ecp	Family Planning	RMNCH+A
+Condom pieces distributed	condoms	Family Planning	RMNCH+A
+Centchroman ( weekly pills) distributed	centchroman	Family Planning	RMNCH+A
+Number of beneficiaries given 1st dose of Injectable (Antara Program)	antara_dose1	Family Planning	RMNCH+A
+Number of beneficiaries given 2nd dose of Injectable (Antara Program)	antara_dose2	Family Planning	RMNCH+A
+Number of beneficiaries given 3rd dose of Injectable (Antara Program)	antara_dose3	Family Planning	RMNCH+A
+Number of beneficiaries given 4th or more than 4 doses of Injectable (Antara Program)	antara_dose4plus	Family Planning	RMNCH+A
+Pregnancy testing kits used	preg_test_kits	Family Planning	RMNCH+A
+Number of Infants given OPV 0 (Birth Dose)	opv0	Universal Immunisation Programme	RMNCH+A
+Number of Infants given BCG	bcg	Universal Immunisation Programme	RMNCH+A
+Number of Infants given Hep- B0 (birth dose)	hepb0	Universal Immunisation Programme	RMNCH+A
+% Newborns given OPV0 at birth to Reported live birth	pct_opv0	Universal Immunisation Programme	RMNCH+A
+% Newborns given BCG to Reported live birth	pct_bcg	Universal Immunisation Programme	RMNCH+A
+% Newborns given Hep-B0(Birth Dose)at birth to Reported live birth	pct_hepb0	Universal Immunisation Programme	RMNCH+A
+Number of Infants given DPT1	dpt1	Universal Immunisation Programme	RMNCH+A
+Number of Infants given DPT2	dpt2	Universal Immunisation Programme	RMNCH+A
+Number of Infants given DPT3	dpt3	Universal Immunisation Programme	RMNCH+A
+Number of Infants given Pentavalent 1	penta1	Universal Immunisation Programme	RMNCH+A
+Number of Infants given Pentavalent 2	penta2	Universal Immunisation Programme	RMNCH+A
+Number of Infants given Pentavalent 3	penta3	Universal Immunisation Programme	RMNCH+A
+Number of Infants given Measles	measles	Universal Immunisation Programme	RMNCH+A
+Number of Infants given MR	mr	Universal Immunisation Programme	RMNCH+A
+% Infants 0 to 11 months old who received Measles+ MR vaccine to reported live births	pct_measles_mr	Universal Immunisation Programme	RMNCH+A
+Number of fully immunized children (9-11 months)	fic	Universal Immunisation Programme	RMNCH+A
+% Drop Out between BCG & Measles/ MR	pct_dropout_bcg_measles	Universal Immunisation Programme	RMNCH+A
+% Children given Vit A dose1 to Reported live birth	pct_vita1	Child Health	RMNCH+A
+% Children given Vitamin A Dose 9 to Children given Vit A dose1	pct_vita9	Child Health	RMNCH+A
+Adverse Events Following Imunisation (Abcess )	aefi_abscess	Universal Immunisation Programme	RMNCH+A
+Adverse Events Following Imunisation (Deaths)	aefi_deaths	Universal Immunisation Programme	RMNCH+A
+Adverse Events Following Imunisation (Others)	aefi_others	Universal Immunisation Programme	RMNCH+A
+% immunisation Sessions Held to Immunisation Sessions Planned	pct_sessions_held	Universal Immunisation Programme	RMNCH+A
+% Immunisation Sessions where ASHAs were present to Immunisation Sessions Planned	pct_sessions_asha	Universal Immunisation Programme	RMNCH+A
+Pneumonia in Children 0-5 Years of Age	pneumonia_u5	Child Health	RMNCH+A
+Asthma in Children 0-5 Years of Age	asthma_u5	Child Health	RMNCH+A
+Sepsis in Children 0-5 Years of Age	sepsis_u5	Child Health	RMNCH+A
+Diphtheria in Children 0-5 Years of Age	diphtheria_u5	Universal Immunisation Programme	RMNCH+A
+Pertussis in Children 0-5 Years of Age	pertussis_u5	Universal Immunisation Programme	RMNCH+A
+Tetanus Neonatorum in Children 0-5 Years of Age	tetanus_neo_u5	Universal Immunisation Programme	RMNCH+A
+Tuberculosis (TB) in Children 0-5 Years of Age	tb_u5	National TB Elimination Programme	Communicable Diseases
+Acute Flaccid Paralysis(AFP)in Children 0-5 Years of Age	afp_u5	Universal Immunisation Programme	RMNCH+A
+Measles in Children 0-5 Years of Age	measles_u5	Universal Immunisation Programme	RMNCH+A
+Malaria in Children 0-5 Years of Age	malaria_u5	National Vector Borne Disease Control Programme	Communicable Diseases
+Diarrhoea in Children 0-5 Years of Age	diarrhoea_u5	Child Health	RMNCH+A
+Diarrhoea treated in Inpatients in Children 0-5 Years of Age	diarrhoea_ipd_u5	Child Health	RMNCH+A
+No. of infants given Measles Rubella vaccine 1st dose	mr1	Universal Immunisation Programme	RMNCH+A
+No. of infants received Rotavirus Vaccine 1st dose	rota1	Universal Immunisation Programme	RMNCH+A
+No. of infants received Rotavirus Vaccine 2nd dose	rota2	Universal Immunisation Programme	RMNCH+A
+No. of infants received Rotavirus Vaccine 3nd dose	rota3	Universal Immunisation Programme	RMNCH+A
+No of children 16-24 months age given Measles 2nd dose	measles2	Universal Immunisation Programme	RMNCH+A
+No of children 16-24 months age given Measles Rubella Vaccine 2nd dose	mr2	Universal Immunisation Programme	RMNCH+A
+% Adult Female Inpatients to Total Adult Inpatient	pct_ipd_adult_female	Health Systems – Hospital Services	Health Systems
+% Children Inpatient to Total Inpatient	pct_ipd_children	Health Systems – Hospital Services	Health Systems
+% Female Inpatient Deaths to Total Inpatient Deaths	pct_ipd_deaths_female	Health Systems – Hospital Services	Health Systems
+% Inpatient Deaths to Total IPD	pct_ipd_deaths	Health Systems – Hospital Services	Health Systems
+IPD (Number)	ipd	Health Systems – Hospital Services	Health Systems
+OPD (Allopathic)	opd_allopathic	Health Systems – Hospital Services	Health Systems
+Ayush OPD (Number)	opd_ayush	AYUSH (Mainstreaming under NHM)	Health Systems
+OPD(Ayush+Allopathic)	opd_total	Health Systems – Hospital Services	Health Systems
+% IPD to OPD	pct_ipd_opd	Health Systems – Hospital Services	Health Systems
+Number of Major Operations	major_ops	Health Systems – Hospital Services	Health Systems
+Number of Minor Operations	minor_ops	Health Systems – Hospital Services	Health Systems
+% Major Operations to Total Operation	pct_major_ops	Health Systems – Hospital Services	Health Systems
+Number of Hysterectomy Surgeries	hysterectomy	Health Systems – Hospital Services	Health Systems
+% Hysterectomy Surgeries to Total Major Operations	pct_hysterectomy	Health Systems – Hospital Services	Health Systems
+% AYUSH OPD to Total OPD	pct_opd_ayush	AYUSH (Mainstreaming under NHM)	Health Systems
+Dental OPD (Number)	opd_dental	National Oral Health Programme	Non-Communicable Diseases
+% Dental OPD to Total OPD	pct_opd_dental	National Oral Health Programme	Non-Communicable Diseases
+% Hb < 7 mg to Total Hb Tests Conducted	pct_hb_lt7	Anaemia Mukt Bharat	RMNCH+A
+% Male HIV Positive to Total Males Tested	pct_hiv_pos_male	National AIDS Control Programme	Communicable Diseases
+% Female screened for HIV to Total ANC Registration	pct_hiv_screened_anc	National AIDS Control Programme	Communicable Diseases
+% Female HIV Positive to Total Females Tested	pct_hiv_pos_female	National AIDS Control Programme	Communicable Diseases
+% Total HIV Positive to Total Tested ( Male + Female)	pct_hiv_pos	National AIDS Control Programme	Communicable Diseases
+% Plasmodium Vivax test positive to Total Blood Smears Examined	pct_pv_pos	National Vector Borne Disease Control Programme	Communicable Diseases
+% Plasmodium Falciparum test positive to Total Blood Smears Examined	pct_pf_pos	National Vector Borne Disease Control Programme	Communicable Diseases
+Total Number of Infant Deaths reported	infant_deaths	Child Health	RMNCH+A
+% Deaths due to Sepsis to Total Reported Infant Deaths	pct_idth_sepsis	Child Health	RMNCH+A
+% Deaths due to Asphyxia to Total Reported Infant Deaths	pct_idth_asphyxia	Child Health	RMNCH+A
+% Deaths due to Pneumonia to Total Reported Infant Deaths	pct_idth_pneumonia	Child Health	RMNCH+A
+% Deaths due to Diarrhoea to Total Reported Infant Deaths	pct_idth_diarrhoea	Child Health	RMNCH+A
+% Deaths due to Fever to Total Reported Infant Deaths	pct_idth_fever	Child Health	RMNCH+A
+% Deaths due to Measles to Total Reported Infant Deaths	pct_idth_measles	Child Health	RMNCH+A
+Institutional Deliveries at Urban Heatlh Facilities i.e SC+PHC+CHC+SDH	inst_del_urban	Maternal Health	RMNCH+A
+Institutional Deliveries at District Hospitals	inst_del_dh	Maternal Health	RMNCH+A
+Measles immunization at urban Health facilities i.e SC+PHC+CHC+SDH+DH	measles_urban	Universal Immunisation Programme	RMNCH+A

@@ -1,0 +1,652 @@
+state	state_id	district	district_id	unique_id
+Jammu & Kashmir	1	Kathua	7	17
+Jammu & Kashmir	1	Jammu	21	121
+Jammu & Kashmir	1	Samba	22	122
+Jammu & Kashmir	1	Punch	5	15
+Jammu & Kashmir	1	Rajouri	6	16
+Jammu & Kashmir	1	Doda	16	116
+Jammu & Kashmir	1	Ramban	17	117
+Jammu & Kashmir	1	Kishtwar	18	118
+Jammu & Kashmir	1	Udhampur	19	119
+Jammu & Kashmir	1	Reasi	20	120
+Jammu & Kashmir	1	Kupwara	1	11
+Jammu & Kashmir	1	Badgam	2	12
+Jammu & Kashmir	1	Baramula	8	18
+Jammu & Kashmir	1	Bandipore	9	19
+Jammu & Kashmir	1	Srinagar	10	110
+Jammu & Kashmir	1	Ganderbal	11	111
+Jammu & Kashmir	1	Pulwama	12	112
+Jammu & Kashmir	1	Shupiyan	13	113
+Jammu & Kashmir	1	Anantnag	14	114
+Jammu & Kashmir	1	Kulgam	15	115
+Jammu & Kashmir	1	Leh (Ladakh)	3	13
+Jammu & Kashmir	1	Kargil	4	14
+Himachal Pradesh	2	Kangra	2	22
+Himachal Pradesh	2	Kullu	4	24
+Himachal Pradesh	2	Mandi	5	25
+Himachal Pradesh	2	Hamirpur	6	26
+Himachal Pradesh	2	Una	7	27
+Himachal Pradesh	2	Chamba	1	21
+Himachal Pradesh	2	Lahul & Spiti	3	23
+Himachal Pradesh	2	Bilaspur	8	28
+Himachal Pradesh	2	Solan	9	29
+Himachal Pradesh	2	Sirmaur	10	210
+Himachal Pradesh	2	Shimla	11	211
+Himachal Pradesh	2	Kinnaur	12	212
+Punjab	3	Gurdaspur	1	31
+Punjab	3	Kapurthala	2	32
+Punjab	3	Jalandhar	3	33
+Punjab	3	Hoshiarpur	4	34
+Punjab	3	Shahid Bhagat Singh Nagar	5	35
+Punjab	3	Amritsar	15	315
+Punjab	3	Tarn Taran	16	316
+Punjab	3	Rupnagar	17	317
+Punjab	3	Sahibzada Ajit Singh Nagar	18	318
+Punjab	3	Pathankot	21	321
+Punjab	3	Fatehgarh Sahib	6	36
+Punjab	3	Ludhiana	7	37
+Punjab	3	Moga	8	38
+Punjab	3	Firozpur	9	39
+Punjab	3	Muktsar	10	310
+Punjab	3	Faridkot	11	311
+Punjab	3	Bathinda	12	312
+Punjab	3	Mansa	13	313
+Punjab	3	Patiala	14	314
+Punjab	3	Sangrur	19	319
+Punjab	3	Barnala	20	320
+Punjab	3	Fazilka	22	322
+Chandigarh	4	Chandigarh	1	41
+Uttarakhand	5	Uttarkashi	1	51
+Uttarakhand	5	Chamoli	2	52
+Uttarakhand	5	Rudraprayag	3	53
+Uttarakhand	5	Tehri Garhwal	4	54
+Uttarakhand	5	Dehradun	5	55
+Uttarakhand	5	Garhwal	6	56
+Uttarakhand	5	Pithoragarh	7	57
+Uttarakhand	5	Bageshwar	8	58
+Uttarakhand	5	Almora	9	59
+Uttarakhand	5	Champawat	10	510
+Uttarakhand	5	Nainital	11	511
+Uttarakhand	5	Udham Singh Nagar	12	512
+Uttarakhand	5	Hardwar	13	513
+Haryana	6	Panchkula	1	61
+Haryana	6	Ambala	2	62
+Haryana	6	Yamunanagar	3	63
+Haryana	6	Kurukshetra	4	64
+Haryana	6	Kaithal	5	65
+Haryana	6	Karnal	6	66
+Haryana	6	Panipat	7	67
+Haryana	6	Sonipat	8	68
+Haryana	6	Rohtak	14	614
+Haryana	6	Jhajjar	15	615
+Haryana	6	Gurgaon	18	618
+Haryana	6	Mewat	19	619
+Haryana	6	Faridabad	20	620
+Haryana	6	Palwal	21	621
+Haryana	6	Jind	9	69
+Haryana	6	Fatehabad	10	610
+Haryana	6	Sirsa	11	611
+Haryana	6	Hisar	12	612
+Haryana	6	Bhiwani	13	613
+Haryana	6	Mahendragarh	16	616
+Haryana	6	Rewari	17	617
+Delhi	7	North West Delhi	1	71
+Delhi	7	North Delhi	2	72
+Delhi	7	North East Delhi	3	73
+Delhi	7	East Delhi	4	74
+Delhi	7	New Delhi	5	75
+Delhi	7	Central Delhi	6	76
+Delhi	7	West Delhi	7	77
+Delhi	7	South West Delhi	8	78
+Delhi	7	South Delhi	9	79
+Rajasthan	8	Bikaner	3	83
+Rajasthan	8	Jodhpur	15	815
+Rajasthan	8	Jaisalmer	16	816
+Rajasthan	8	Barmer	17	817
+Rajasthan	8	Jalor	18	818
+Rajasthan	8	Sirohi	19	819
+Rajasthan	8	Pali	20	820
+Rajasthan	8	Alwar	6	86
+Rajasthan	8	Bharatpur	7	87
+Rajasthan	8	Dhaulpur	8	88
+Rajasthan	8	Karauli	9	89
+Rajasthan	8	Sawai Madhopur	10	810
+Rajasthan	8	Dausa	11	811
+Rajasthan	8	Jaipur	12	812
+Rajasthan	8	Ajmer	21	821
+Rajasthan	8	Tonk	22	822
+Rajasthan	8	Bhilwara	24	824
+Rajasthan	8	Rajsamand	25	825
+Rajasthan	8	Dungarpur	26	826
+Rajasthan	8	Banswara	27	827
+Rajasthan	8	Udaipur	32	832
+Rajasthan	8	Bundi	23	823
+Rajasthan	8	Chittaurgarh	28	828
+Rajasthan	8	Kota	29	829
+Rajasthan	8	Baran	30	830
+Rajasthan	8	Jhalawar	31	831
+Rajasthan	8	Pratapgarh	33	833
+Rajasthan	8	Ganganagar	1	81
+Rajasthan	8	Hanumangarh	2	82
+Rajasthan	8	Churu	4	84
+Rajasthan	8	Jhunjhunun	5	85
+Rajasthan	8	Sikar	13	813
+Rajasthan	8	Nagaur	14	814
+Uttar Pradesh	9	Saharanpur	1	91
+Uttar Pradesh	9	Muzaffarnagar	2	92
+Uttar Pradesh	9	Bijnor	3	93
+Uttar Pradesh	9	Moradabad	4	94
+Uttar Pradesh	9	Rampur	5	95
+Uttar Pradesh	9	Jyotiba Phule Nagar	6	96
+Uttar Pradesh	9	Meerut	7	97
+Uttar Pradesh	9	Baghpat	8	98
+Uttar Pradesh	9	Ghaziabad	9	99
+Uttar Pradesh	9	Gautam Buddha Nagar	10	910
+Uttar Pradesh	9	Sitapur	23	923
+Uttar Pradesh	9	Hardoi	24	924
+Uttar Pradesh	9	Unnao	25	925
+Uttar Pradesh	9	Lucknow	26	926
+Uttar Pradesh	9	Rae Bareli	27	927
+Uttar Pradesh	9	Kanpur Dehat	32	932
+Uttar Pradesh	9	Kanpur Nagar	33	933
+Uttar Pradesh	9	Fatehpur	41	941
+Uttar Pradesh	9	Bara Banki	45	945
+Uttar Pradesh	9	Pratapgarh	42	942
+Uttar Pradesh	9	Kaushambi	43	943
+Uttar Pradesh	9	Allahabad	44	944
+Uttar Pradesh	9	Faizabad	46	946
+Uttar Pradesh	9	Ambedkar Nagar	47	947
+Uttar Pradesh	9	Sultanpur	48	948
+Uttar Pradesh	9	Bahraich	49	949
+Uttar Pradesh	9	Shrawasti	50	950
+Uttar Pradesh	9	Balrampur	51	951
+Uttar Pradesh	9	Gonda	52	952
+Uttar Pradesh	9	Siddharthnagar	53	953
+Uttar Pradesh	9	Basti	54	954
+Uttar Pradesh	9	Sant Kabir Nagar	55	955
+Uttar Pradesh	9	Mahrajganj	56	956
+Uttar Pradesh	9	Gorakhpur	57	957
+Uttar Pradesh	9	Kushinagar	58	958
+Uttar Pradesh	9	Deoria	59	959
+Uttar Pradesh	9	Azamgarh	60	960
+Uttar Pradesh	9	Mau	61	961
+Uttar Pradesh	9	Ballia	62	962
+Uttar Pradesh	9	Jaunpur	63	963
+Uttar Pradesh	9	Ghazipur	64	964
+Uttar Pradesh	9	Chandauli	65	965
+Uttar Pradesh	9	Varanasi	66	966
+Uttar Pradesh	9	Sant Ravidas Nagar (Bhadohi)	67	967
+Uttar Pradesh	9	Mirzapur	68	968
+Uttar Pradesh	9	Sonbhadra	69	969
+Uttar Pradesh	9	Jalaun	34	934
+Uttar Pradesh	9	Jhansi	35	935
+Uttar Pradesh	9	Lalitpur	36	936
+Uttar Pradesh	9	Hamirpur	37	937
+Uttar Pradesh	9	Mahoba	38	938
+Uttar Pradesh	9	Banda	39	939
+Uttar Pradesh	9	Chitrakoot	40	940
+Uttar Pradesh	9	Bulandshahr	11	911
+Uttar Pradesh	9	Aligarh	12	912
+Uttar Pradesh	9	Mahamaya Nagar	13	913
+Uttar Pradesh	9	Mathura	14	914
+Uttar Pradesh	9	Agra	15	915
+Uttar Pradesh	9	Firozabad	16	916
+Uttar Pradesh	9	Mainpuri	17	917
+Uttar Pradesh	9	Budaun	18	918
+Uttar Pradesh	9	Bareilly	19	919
+Uttar Pradesh	9	Pilibhit	20	920
+Uttar Pradesh	9	Shahjahanpur	21	921
+Uttar Pradesh	9	Kheri	22	922
+Uttar Pradesh	9	Farrukhabad	28	928
+Uttar Pradesh	9	Kannauj	29	929
+Uttar Pradesh	9	Etawah	30	930
+Uttar Pradesh	9	Auraiya	31	931
+Uttar Pradesh	9	Etah	70	970
+Uttar Pradesh	9	Kanshiram Nagar	71	971
+Bihar	10	Pashchim Champaran	1	101
+Bihar	10	Purba Champaran	2	102
+Bihar	10	Sheohar	3	103
+Bihar	10	Sitamarhi	4	104
+Bihar	10	Madhubani	5	105
+Bihar	10	Supaul	6	106
+Bihar	10	Araria	7	107
+Bihar	10	Kishanganj	8	108
+Bihar	10	Purnia	9	109
+Bihar	10	Katihar	10	1010
+Bihar	10	Madhepura	11	1011
+Bihar	10	Saharsa	12	1012
+Bihar	10	Darbhanga	13	1013
+Bihar	10	Muzaffarpur	14	1014
+Bihar	10	Gopalganj	15	1015
+Bihar	10	Siwan	16	1016
+Bihar	10	Saran	17	1017
+Bihar	10	Vaishali	18	1018
+Bihar	10	Samastipur	19	1019
+Bihar	10	Begusarai	20	1020
+Bihar	10	Khagaria	21	1021
+Bihar	10	Bhagalpur	22	1022
+Bihar	10	Banka	23	1023
+Bihar	10	Munger	24	1024
+Bihar	10	Lakhisarai	25	1025
+Bihar	10	Sheikhpura	26	1026
+Bihar	10	Nalanda	27	1027
+Bihar	10	Patna	28	1028
+Bihar	10	Bhojpur	29	1029
+Bihar	10	Buxar	30	1030
+Bihar	10	Kaimur (Bhabua)	31	1031
+Bihar	10	Rohtas	32	1032
+Bihar	10	Aurangabad	33	1033
+Bihar	10	Gaya	34	1034
+Bihar	10	Nawada	35	1035
+Bihar	10	Jamui	36	1036
+Bihar	10	Jehanabad	37	1037
+Bihar	10	Arwal	38	1038
+Sikkim	11	North District	1	111
+Sikkim	11	West District	2	112
+Sikkim	11	South District	3	113
+Sikkim	11	East District	4	114
+Arunachal Pradesh	12	Tawang	1	121
+Arunachal Pradesh	12	West Kameng	2	122
+Arunachal Pradesh	12	East Kameng	3	123
+Arunachal Pradesh	12	Papum Pare	4	124
+Arunachal Pradesh	12	Upper Subansiri	5	125
+Arunachal Pradesh	12	West Siang	6	126
+Arunachal Pradesh	12	East Siang	7	127
+Arunachal Pradesh	12	Upper Siang	8	128
+Arunachal Pradesh	12	Changlang	9	129
+Arunachal Pradesh	12	Tirap	10	1210
+Arunachal Pradesh	12	Lower Subansiri	11	1211
+Arunachal Pradesh	12	Kurung Kumey	12	1212
+Arunachal Pradesh	12	Dibang Valley	13	1213
+Arunachal Pradesh	12	Lower Dibang Valley	14	1214
+Arunachal Pradesh	12	Lohit	15	1215
+Arunachal Pradesh	12	Anjaw	16	1216
+Nagaland	13	Mon	1	131
+Nagaland	13	Mokokchung	2	132
+Nagaland	13	Zunheboto	3	133
+Nagaland	13	Wokha	4	134
+Nagaland	13	Dimapur	5	135
+Nagaland	13	Phek	6	136
+Nagaland	13	Tuensang	7	137
+Nagaland	13	Longleng	8	138
+Nagaland	13	Kiphire	9	139
+Nagaland	13	Kohima	10	1310
+Nagaland	13	Peren	11	1311
+Manipur	14	Bishnupur	4	144
+Manipur	14	Thoubal	5	145
+Manipur	14	Imphal West	6	146
+Manipur	14	Imphal East	7	147
+Manipur	14	Senapati	1	141
+Manipur	14	Tamenglong	2	142
+Manipur	14	Churachandpur	3	143
+Manipur	14	Ukhrul	8	148
+Manipur	14	Chandel	9	149
+Mizoram	15	Mamit	1	151
+Mizoram	15	Kolasib	2	152
+Mizoram	15	Aizawl	3	153
+Mizoram	15	Champhai	4	154
+Mizoram	15	Serchhip	5	155
+Mizoram	15	Lunglei	6	156
+Mizoram	15	Lawngtlai	7	157
+Mizoram	15	Saiha	8	158
+Tripura	16	West Tripura	1	161
+Tripura	16	South Tripura	2	162
+Tripura	16	Dhalai	3	163
+Tripura	16	North Tripura	4	164
+Meghalaya	17	West Garo Hills	1	171
+Meghalaya	17	East Garo Hills	2	172
+Meghalaya	17	South Garo Hills	3	173
+Meghalaya	17	West Khasi Hills	4	174
+Meghalaya	17	Ribhoi	5	175
+Meghalaya	17	East Khasi Hills	6	176
+Meghalaya	17	Jaintia Hills	7	177
+Assam	18	Lakhimpur	8	188
+Assam	18	Dhemaji	9	189
+Assam	18	Tinsukia	10	1810
+Assam	18	Dibrugarh	11	1811
+Assam	18	Sivasagar	12	1812
+Assam	18	Jorhat	13	1813
+Assam	18	Golaghat	14	1814
+Assam	18	Kokrajhar	1	181
+Assam	18	Dhubri	2	182
+Assam	18	Goalpara	3	183
+Assam	18	Barpeta	4	184
+Assam	18	Bongaigaon	20	1820
+Assam	18	Chirang	21	1821
+Assam	18	Kamrup	22	1822
+Assam	18	Kamrup Metropolitan	23	1823
+Assam	18	Nalbari	24	1824
+Assam	18	Baksa	25	1825
+Assam	18	Karbi Anglong	15	1815
+Assam	18	Dima Hasao	16	1816
+Assam	18	Cachar	17	1817
+Assam	18	Karimganj	18	1818
+Assam	18	Hailakandi	19	1819
+Assam	18	Morigaon	5	185
+Assam	18	Nagaon	6	186
+Assam	18	Sonitpur	7	187
+Assam	18	Darrang	26	1826
+Assam	18	Udalguri	27	1827
+West Bengal	19	Darjiling	1	191
+West Bengal	19	Jalpaiguri	2	192
+West Bengal	19	Koch Bihar	3	193
+West Bengal	19	Uttar Dinajpur	4	194
+West Bengal	19	Dakshin Dinajpur	5	195
+West Bengal	19	Maldah	6	196
+West Bengal	19	Murshidabad	7	197
+West Bengal	19	Birbhum	8	198
+West Bengal	19	Nadia	10	1910
+West Bengal	19	North Twenty Four Parganas	11	1911
+West Bengal	19	Kolkata	16	1916
+West Bengal	19	South Twenty Four Parganas	17	1917
+West Bengal	19	Barddhaman	9	199
+West Bengal	19	Hugli	12	1912
+West Bengal	19	Haora	15	1915
+West Bengal	19	Bankura	13	1913
+West Bengal	19	Puruliya	14	1914
+West Bengal	19	Paschim Medinipur	18	1918
+West Bengal	19	Purba Medinipur	19	1919
+Jharkhand	20	Garhwa	1	201
+Jharkhand	20	Lohardaga	11	2011
+Jharkhand	20	Purbi Singhbhum	12	2012
+Jharkhand	20	Palamu	13	2013
+Jharkhand	20	Latehar	14	2014
+Jharkhand	20	Ranchi	19	2019
+Jharkhand	20	Khunti	20	2020
+Jharkhand	20	Gumla	21	2021
+Jharkhand	20	Simdega	22	2022
+Jharkhand	20	Pashchimi Singhbhum	23	2023
+Jharkhand	20	Saraikela-Kharsawan	24	2024
+Jharkhand	20	Chatra	2	202
+Jharkhand	20	Kodarma	3	203
+Jharkhand	20	Giridih	4	204
+Jharkhand	20	Deoghar	5	205
+Jharkhand	20	Godda	6	206
+Jharkhand	20	Sahibganj	7	207
+Jharkhand	20	Pakur	8	208
+Jharkhand	20	Dhanbad	9	209
+Jharkhand	20	Bokaro	10	2010
+Jharkhand	20	Hazaribagh	15	2015
+Jharkhand	20	Ramgarh	16	2016
+Jharkhand	20	Dumka	17	2017
+Jharkhand	20	Jamtara	18	2018
+Odisha	21	Baleshwar	8	218
+Odisha	21	Bhadrak	9	219
+Odisha	21	Kendrapara	10	2110
+Odisha	21	Jagatsinghapur	11	2111
+Odisha	21	Cuttack	12	2112
+Odisha	21	Jajapur	13	2113
+Odisha	21	Nayagarh	16	2116
+Odisha	21	Khordha	17	2117
+Odisha	21	Puri	18	2118
+Odisha	21	Ganjam	19	2119
+Odisha	21	Gajapati	20	2120
+Odisha	21	Kandhamal	21	2121
+Odisha	21	Baudh	22	2122
+Odisha	21	Subarnapur	23	2123
+Odisha	21	Balangir	24	2124
+Odisha	21	Nuapada	25	2125
+Odisha	21	Kalahandi	26	2126
+Odisha	21	Rayagada	27	2127
+Odisha	21	Nabarangapur	28	2128
+Odisha	21	Koraput	29	2129
+Odisha	21	Malkangiri	30	2130
+Odisha	21	Bargarh	1	211
+Odisha	21	Jharsuguda	2	212
+Odisha	21	Sambalpur	3	213
+Odisha	21	Debagarh	4	214
+Odisha	21	Sundargarh	5	215
+Odisha	21	Kendujhar	6	216
+Odisha	21	Mayurbhanj	7	217
+Odisha	21	Dhenkanal	14	2114
+Odisha	21	Anugul	15	2115
+Chhattisgarh	22	Koriya	1	221
+Chhattisgarh	22	Surguja	2	222
+Chhattisgarh	22	Surajpur	26	2226
+Chhattisgarh	22	Balrampur	27	2227
+Chhattisgarh	22	Jashpur	3	223
+Chhattisgarh	22	Raigarh	4	224
+Chhattisgarh	22	Korba	5	225
+Chhattisgarh	22	Janjgir-Champa	6	226
+Chhattisgarh	22	Bilaspur	7	227
+Chhattisgarh	22	Kabeerdham	8	228
+Chhattisgarh	22	Rajnandgaon	9	229
+Chhattisgarh	22	Durg	10	2210
+Chhattisgarh	22	Raipur	11	2211
+Chhattisgarh	22	Mahasamund	12	2212
+Chhattisgarh	22	Dhamtari	13	2213
+Chhattisgarh	22	Balodabazar	19	2219
+Chhattisgarh	22	Gariyaband	20	2220
+Chhattisgarh	22	Bemetara	23	2223
+Chhattisgarh	22	Balod	24	2224
+Chhattisgarh	22	Mungeli	25	2225
+Chhattisgarh	22	Uttar Bastar Kanker	14	2214
+Chhattisgarh	22	Bastar	15	2215
+Chhattisgarh	22	Narayanpur	16	2216
+Chhattisgarh	22	Dakshin Bastar Dantewada	17	2217
+Chhattisgarh	22	Bijapur	18	2218
+Chhattisgarh	22	Kondagaon	21	2221
+Chhattisgarh	22	Sukama	22	2222
+Madhya Pradesh	23	Tikamgarh	7	237
+Madhya Pradesh	23	Chhatarpur	8	238
+Madhya Pradesh	23	Panna	9	239
+Madhya Pradesh	23	Satna	12	2312
+Madhya Pradesh	23	Rewa	13	2313
+Madhya Pradesh	23	Umaria	14	2314
+Madhya Pradesh	23	Shahdol	43	2343
+Madhya Pradesh	23	Anuppur	44	2344
+Madhya Pradesh	23	Sidhi	45	2345
+Madhya Pradesh	23	Singrauli	46	2346
+Madhya Pradesh	23	Sagar	10	2310
+Madhya Pradesh	23	Damoh	11	2311
+Madhya Pradesh	23	Vidisha	26	2326
+Madhya Pradesh	23	Bhopal	27	2327
+Madhya Pradesh	23	Sehore	28	2328
+Madhya Pradesh	23	Raisen	29	2329
+Madhya Pradesh	23	Neemuch	15	2315
+Madhya Pradesh	23	Mandsaur	16	2316
+Madhya Pradesh	23	Ratlam	17	2317
+Madhya Pradesh	23	Ujjain	18	2318
+Madhya Pradesh	23	Shajapur	19	2319
+Madhya Pradesh	23	Dewas	20	2320
+Madhya Pradesh	23	Dhar	21	2321
+Madhya Pradesh	23	Indore	22	2322
+Madhya Pradesh	23	Rajgarh	25	2325
+Madhya Pradesh	23	Jhabua	47	2347
+Madhya Pradesh	23	Alirajpur	48	2348
+Madhya Pradesh	23	Katni	33	2333
+Madhya Pradesh	23	Jabalpur	34	2334
+Madhya Pradesh	23	Narsimhapur	35	2335
+Madhya Pradesh	23	Dindori	36	2336
+Madhya Pradesh	23	Mandla	37	2337
+Madhya Pradesh	23	Chhindwara	38	2338
+Madhya Pradesh	23	Seoni	39	2339
+Madhya Pradesh	23	Balaghat	40	2340
+Madhya Pradesh	23	Khargone	23	2323
+Madhya Pradesh	23	Barwani	24	2324
+Madhya Pradesh	23	Betul	30	2330
+Madhya Pradesh	23	Harda	31	2331
+Madhya Pradesh	23	Hoshangabad	32	2332
+Madhya Pradesh	23	Khandwa	49	2349
+Madhya Pradesh	23	Burhanpur	50	2350
+Madhya Pradesh	23	Sheopur	1	231
+Madhya Pradesh	23	Morena	2	232
+Madhya Pradesh	23	Bhind	3	233
+Madhya Pradesh	23	Gwalior	4	234
+Madhya Pradesh	23	Datia	5	235
+Madhya Pradesh	23	Shivpuri	6	236
+Madhya Pradesh	23	Guna	41	2341
+Madhya Pradesh	23	Ashoknagar	42	2342
+Gujarat	24	Panch Mahals	17	2417
+Gujarat	24	Dohad	18	2418
+Gujarat	24	Vadodara	19	2419
+Gujarat	24	Narmada	20	2420
+Gujarat	24	Bharuch	21	2421
+Gujarat	24	The Dangs	22	2422
+Gujarat	24	Navsari	23	2423
+Gujarat	24	Valsad	24	2424
+Gujarat	24	Surat	25	2425
+Gujarat	24	Tapi	26	2426
+Gujarat	24	Mahesana	4	244
+Gujarat	24	Sabar Kantha	5	245
+Gujarat	24	Gandhinagar	6	246
+Gujarat	24	Ahmedabad	7	247
+Gujarat	24	Anand	15	2415
+Gujarat	24	Kheda	16	2416
+Gujarat	24	Banas Kantha	2	242
+Gujarat	24	Patan	3	243
+Gujarat	24	Kachchh	1	241
+Gujarat	24	Surendranagar	8	248
+Gujarat	24	Rajkot	9	249
+Gujarat	24	Jamnagar	10	2410
+Gujarat	24	Porbandar	11	2411
+Gujarat	24	Junagadh	12	2412
+Gujarat	24	Amreli	13	2413
+Gujarat	24	Bhavnagar	14	2414
+Daman & Diu	25	Diu	1	251
+Daman & Diu	25	Daman	2	252
+Dadra & Nagar Haveli	26	Dadra & Nagar Haveli	1	261
+Maharashtra	27	Thane	21	2721
+Maharashtra	27	Mumbai Suburban	22	2722
+Maharashtra	27	Mumbai	23	2723
+Maharashtra	27	Raigarh	24	2724
+Maharashtra	27	Ratnagiri	32	2732
+Maharashtra	27	Sindhudurg	33	2733
+Maharashtra	27	Pune	25	2725
+Maharashtra	27	Ahmadnagar	26	2726
+Maharashtra	27	Solapur	30	2730
+Maharashtra	27	Satara	31	2731
+Maharashtra	27	Kolhapur	34	2734
+Maharashtra	27	Sangli	35	2735
+Maharashtra	27	Nandurbar	1	271
+Maharashtra	27	Dhule	2	272
+Maharashtra	27	Jalgaon	3	273
+Maharashtra	27	Nashik	20	2720
+Maharashtra	27	Nanded	15	2715
+Maharashtra	27	Hingoli	16	2716
+Maharashtra	27	Parbhani	17	2717
+Maharashtra	27	Jalna	18	2718
+Maharashtra	27	Aurangabad	19	2719
+Maharashtra	27	Bid	27	2727
+Maharashtra	27	Latur	28	2728
+Maharashtra	27	Osmanabad	29	2729
+Maharashtra	27	Buldana	4	274
+Maharashtra	27	Akola	5	275
+Maharashtra	27	Washim	6	276
+Maharashtra	27	Amravati	7	277
+Maharashtra	27	Wardha	8	278
+Maharashtra	27	Nagpur	9	279
+Maharashtra	27	Yavatmal	14	2714
+Maharashtra	27	Bhandara	10	2710
+Maharashtra	27	Gondiya	11	2711
+Maharashtra	27	Gadchiroli	12	2712
+Maharashtra	27	Chandrapur	13	2713
+Andhra Pradesh	28	Srikakulam	1	281
+Andhra Pradesh	28	Vizianagaram	2	282
+Andhra Pradesh	28	Visakhapatnam	3	283
+Andhra Pradesh	28	East Godavari	4	284
+Andhra Pradesh	28	West Godavari	5	285
+Andhra Pradesh	28	Krishna	6	286
+Andhra Pradesh	28	Guntur	7	287
+Andhra Pradesh	28	Prakasam	8	288
+Andhra Pradesh	28	Sri Potti Sriramulu Nellore	9	289
+Andhra Pradesh	28	Y.S.R. (Cuddapah)	10	2810
+Andhra Pradesh	28	Kurnool	11	2811
+Andhra Pradesh	28	Anantapur	12	2812
+Andhra Pradesh	28	Chittoor	13	2813
+Karnataka	29	Uttara Kannada	9	299
+Karnataka	29	Udupi	15	2915
+Karnataka	29	Dakshina Kannada	21	2921
+Karnataka	29	Shimoga	14	2914
+Karnataka	29	Chikmagalur	16	2916
+Karnataka	29	Hassan	20	2920
+Karnataka	29	Kodagu	22	2922
+Karnataka	29	Tumkur	17	2917
+Karnataka	29	Bangalore	18	2918
+Karnataka	29	Mandya	19	2919
+Karnataka	29	Mysore	23	2923
+Karnataka	29	Chamarajanagar	24	2924
+Karnataka	29	Kolar	27	2927
+Karnataka	29	Chikkaballapura	28	2928
+Karnataka	29	Bangalore (Rural)	29	2929
+Karnataka	29	Ramanagara	30	2930
+Karnataka	29	Belgaum	1	291
+Karnataka	29	Bagalkot	2	292
+Karnataka	29	Bijapur	3	293
+Karnataka	29	Bidar	4	294
+Karnataka	29	Raichur	5	295
+Karnataka	29	Koppal	6	296
+Karnataka	29	Gadag	7	297
+Karnataka	29	Dharwad	8	298
+Karnataka	29	Haveri	10	2910
+Karnataka	29	Bellary	11	2911
+Karnataka	29	Chitradurga	12	2912
+Karnataka	29	Davanagere	13	2913
+Karnataka	29	Gulbarga	25	2925
+Karnataka	29	Yadgir	26	2926
+Goa	30	North Goa	1	301
+Goa	30	South Goa	2	302
+Lakshadweep	31	Lakshadweep	1	311
+Kerala	32	Kasaragod	1	321
+Kerala	32	Kannur	2	322
+Kerala	32	Wayanad	3	323
+Kerala	32	Kozhikode	4	324
+Kerala	32	Malappuram	5	325
+Kerala	32	Palakkad	6	326
+Kerala	32	Thrissur	7	327
+Kerala	32	Ernakulam	8	328
+Kerala	32	Idukki	9	329
+Kerala	32	Kottayam	10	3210
+Kerala	32	Alappuzha	11	3211
+Kerala	32	Pathanamthitta	12	3212
+Kerala	32	Kollam	13	3213
+Kerala	32	Thiruvananthapuram	14	3214
+Tamil Nadu	33	Thiruvallur	1	331
+Tamil Nadu	33	Chennai	2	332
+Tamil Nadu	33	Kancheepuram	3	333
+Tamil Nadu	33	Vellore	4	334
+Tamil Nadu	33	Tiruvannamalai	5	335
+Tamil Nadu	33	Viluppuram	6	336
+Tamil Nadu	33	Cuddalore	16	3316
+Tamil Nadu	33	Karur	12	3312
+Tamil Nadu	33	Tiruchirappalli	13	3313
+Tamil Nadu	33	Perambalur	14	3314
+Tamil Nadu	33	Ariyalur	15	3315
+Tamil Nadu	33	Nagapattinam	17	3317
+Tamil Nadu	33	Thiruvarur	18	3318
+Tamil Nadu	33	Thanjavur	19	3319
+Tamil Nadu	33	Pudukkottai	20	3320
+Tamil Nadu	33	Dindigul	11	3311
+Tamil Nadu	33	Sivaganga	21	3321
+Tamil Nadu	33	Madurai	22	3322
+Tamil Nadu	33	Theni	23	3323
+Tamil Nadu	33	Virudhunagar	24	3324
+Tamil Nadu	33	Ramanathapuram	25	3325
+Tamil Nadu	33	Thoothukkudi	26	3326
+Tamil Nadu	33	Tirunelveli	27	3327
+Tamil Nadu	33	Kanniyakumari	28	3328
+Tamil Nadu	33	Salem	7	337
+Tamil Nadu	33	Namakkal	8	338
+Tamil Nadu	33	Erode	9	339
+Tamil Nadu	33	The Nilgiris	10	3310
+Tamil Nadu	33	Dharmapuri	29	3329
+Tamil Nadu	33	Krishnagiri	30	3330
+Tamil Nadu	33	Coimbatore	31	3331
+Tamil Nadu	33	Tiruppur	32	3332
+Pondicherry	34	Yanam	1	341
+Pondicherry	34	Puducherry	2	342
+Pondicherry	34	Mahe	3	343
+Pondicherry	34	Karaikal	4	344
+Andaman & Nicobar Islands	35	Nicobars	1	351
+Andaman & Nicobar Islands	35	North & Middle Andaman	2	352
+Andaman & Nicobar Islands	35	South Andaman	3	353
+Telangana	36	Adilabad	1	361
+Telangana	36	Nizamabad	2	362
+Telangana	36	Medak	4	364
+Telangana	36	Hyderabad	5	365
+Telangana	36	Rangareddy	6	366
+Telangana	36	Mahbubnagar	7	367
+Telangana	36	Karimnagar	3	363
+Telangana	36	Nalgonda	8	368
+Telangana	36	Warangal	9	369
+Telangana	36	Khammam	10	3610

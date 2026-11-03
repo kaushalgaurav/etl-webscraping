@@ -1,0 +1,212 @@
+[
+  {
+    "name": "Census 2011 - All India districts (PCA)",
+    "connector": "census_india",
+    "config": {
+      "level": "district",
+      "urbrur": 0,
+      "census_year": 2011
+    },
+    "geo_level": "district",
+    "theme": "Demographic",
+    "publisher": "Office of the Registrar General & Census Commissioner, India",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://censusindia.gov.in/census.website/data/population-finder",
+    "enabled": true,
+    "notes": "VERIFIED end-to-end: 640 districts x 85 Primary Census Abstract indicators; national population sums to 1,210,854,977 (matches the official Census 2011 total). Supplies Population, Male/Female, 0-6, SC/ST, literate/illiterate and the full worker breakdown. SSL verification disabled for this host (incomplete cert chain). ~33 paginated calls."
+  },
+  {
+    "name": "Census 2011 - Bihar districts (PCA)",
+    "connector": "census_india",
+    "config": {
+      "state": 10,
+      "level": "district",
+      "urbrur": 0,
+      "census_year": 2011
+    },
+    "geo_level": "district",
+    "theme": "Demographic",
+    "publisher": "Office of the Registrar General & Census Commissioner, India",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://censusindia.gov.in/census.website/data/population-finder",
+    "enabled": false,
+    "notes": "VERIFIED: 38 districts x 85 indicators. Single-state example; disabled since the All India source supersedes it."
+  },
+  {
+    "name": "NFHS-5 district factsheets (2019-21)",
+    "connector": "data_gov_in",
+    "config": {
+      "url": "https://api.data.gov.in/resource/cf80173e-fece-439d-a0b1-6e9cb510593d"
+    },
+    "geo_level": "district",
+    "theme": "RMNCH/Nutrition/NCDs",
+    "publisher": "Ministry of Health and Family Welfare / IIPS",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://www.data.gov.in/catalog/national-family-health-survey-5-nfhs-5-india-districts-factsheet-data-provisional",
+    "enabled": true,
+    "notes": "SCHEMA VERIFIED (707 districts x 109 fields); full ingest BLOCKED on a data.gov.in API key. Keyed on State_UT + District_Names, which the semantic layer resolves to state/district at 1.0 confidence. Covers large parts of the RMNCH, Nutrition, NCDs, Socio-economic and Demographic sheets."
+  },
+  {
+    "name": "NFHS-5 All India and State/UT factsheets (2019-21)",
+    "connector": "data_gov_in",
+    "config": {
+      "url": "https://api.data.gov.in/resource/7c568619-b9b4-40bb-b563-68c28c27a6c1"
+    },
+    "geo_level": "state",
+    "theme": "RMNCH/Nutrition/NCDs",
+    "publisher": "Ministry of Health and Family Welfare / IIPS",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://www.data.gov.in/catalog/national-family-health-survey-nfhs-5-provisional",
+    "enabled": true,
+    "notes": "Resource id confirmed in the catalog; ingest BLOCKED on an API key. State-level counterpart for the template's state-only NFHS-5 rows."
+  },
+  {
+    "name": "India TB Report 2023",
+    "connector": "data_gov_catalog",
+    "config": {
+      "catalog_uuid": "cb8909ee-5b02-49a0-b4f2-74c014d96345",
+      "max_resources": 32
+    },
+    "geo_level": "state",
+    "theme": "Communicable diseases",
+    "publisher": "Central TB Division, Ministry of Health and Family Welfare",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://www.data.gov.in/catalog/india-tuberculosis-report-2023",
+    "enabled": true,
+    "notes": "CATALOG VERIFIED: 32 resources including 'Treatment outcome of TB patients notified, Total, 2021' and public/private sector splits. Serves the CDs sheet's TB notification and treatment-success rows (template cites the 2019 report; 2023 is what data.gov.in publishes). Row fetch BLOCKED on an API key."
+  },
+  {
+    "name": "NACO - State/UT adult HIV prevalence",
+    "connector": "data_gov_catalog",
+    "config": {
+      "catalog_uuid": "a0d5feec-af1a-4637-b3d2-23241b749008"
+    },
+    "geo_level": "state",
+    "theme": "Communicable diseases",
+    "publisher": "National AIDS Control Organisation (NACO)",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://www.data.gov.in/",
+    "enabled": true,
+    "notes": "CATALOG VERIFIED: 1 resource, 'State/UT-wise Estimated Adult (15-49 Years) HIV Prevalence (%) With Uncertainty Bounds'. Serves the CDs sheet's 'HIV prevalence' row. Row fetch BLOCKED on an API key."
+  },
+  {
+    "name": "NACO - State/UT HIV infections (PLHIV)",
+    "connector": "data_gov_catalog",
+    "config": {
+      "catalog_uuid": "81150874-cc0f-434a-b723-5f75fc0b9956"
+    },
+    "geo_level": "state",
+    "theme": "Communicable diseases",
+    "publisher": "National AIDS Control Organisation (NACO)",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://www.data.gov.in/",
+    "enabled": true,
+    "notes": "CATALOG VERIFIED: 1 resource, 'State/UT-wise Estimated Number of HIV Infections with Uncertainty Bounds'. Serves the CDs sheet's 'PLHIV' row. Row fetch BLOCKED on an API key."
+  },
+  {
+    "name": "NACO - State/UT AIDS-related deaths",
+    "connector": "data_gov_catalog",
+    "config": {
+      "catalog_uuid": "3d937071-d21e-4f1d-854d-49fb6f810ec9"
+    },
+    "geo_level": "state",
+    "theme": "Communicable diseases",
+    "publisher": "National AIDS Control Organisation (NACO)",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://www.data.gov.in/",
+    "enabled": true,
+    "notes": "CATALOG VERIFIED: 1 resource, 'State/UT-wise Estimated Number of Annual AIDS-related Deaths with Uncertainty Bounds'. Serves the CDs sheet's 'AIDS related deaths (ARD)' row. Row fetch BLOCKED on an API key."
+  },
+  {
+    "name": "AYUSH hospitals, beds and dispensaries",
+    "connector": "data_gov_catalog",
+    "config": {
+      "catalog_uuid": "84b2b894-8fea-4b2f-b510-44d479d21d7c"
+    },
+    "geo_level": "state",
+    "theme": "Infrastructure",
+    "publisher": "Ministry of AYUSH",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://www.data.gov.in/",
+    "enabled": true,
+    "notes": "CATALOG VERIFIED: 1 resource, state/UT-wise distribution of AYUSH hospitals, beds and dispensaries. Serves the Infrastructure sheet's 'Total number of AYUSH dispensaries and hospitals' row. Row fetch BLOCKED on an API key."
+  },
+  {
+    "name": "Blood Bank Directory (National Health Portal)",
+    "connector": "data_gov_catalog",
+    "config": {
+      "catalog_uuid": "6808ce65-e366-4a1e-becd-a443a1dffa9e",
+      "max_resources": 1
+    },
+    "geo_level": "facility",
+    "theme": "Infrastructure",
+    "publisher": "National Health Portal / Ministry of Health and Family Welfare",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://www.data.gov.in/",
+    "enabled": true,
+    "notes": "CATALOG VERIFIED: 2 resources; capped to the current one ('Blood Bank Directory (updated till last month)'), the other is a 2015 snapshot. Facility-level listing - needs aggregating to state to serve the Infrastructure sheet's blood-bank count. The template cites e-Rakthkosh, which is a different (non-data.gov.in) source. Row fetch BLOCKED on an API key."
+  },
+  {
+    "name": "Road Accidents in India 2022",
+    "connector": "data_gov_catalog",
+    "config": {
+      "catalog_uuid": "91b55af3-118b-4a58-be23-5bfa30fc2cd1",
+      "max_resources": 20
+    },
+    "geo_level": "state",
+    "theme": "NCDs",
+    "publisher": "Ministry of Road Transport and Highways",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://www.data.gov.in/catalog/road-accidents-india-2022",
+    "enabled": false,
+    "notes": "CATALOG VERIFIED: 58 resources (city-wise and state-wise accident breakdowns). Serves the NCDs sheet's road-accident rows. Note the template cites NCRB 2021 while this is MoRTH 2022 - different publisher and year, so confirm which the report needs before enabling. Capped at 20 resources; disabled pending that decision."
+  },
+  {
+    "name": "Census 2011 - All India sub-districts (PCA)",
+    "connector": "census_india",
+    "config": {
+      "level": "subdistrict",
+      "urbrur": 0,
+      "census_year": 2011
+    },
+    "geo_level": "subdistrict",
+    "theme": "Demographic",
+    "publisher": "Office of the Registrar General & Census Commissioner, India",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://censusindia.gov.in/census.website/data/population-finder",
+    "enabled": false,
+    "notes": "1,526,940 records = 306 paginated calls, ~1.75 hours at the API's observed 243 records/sec. ~5,990 sub-districts x 85 indicators. Disabled by default so run-all does not trigger a long fetch; enable or run it explicitly."
+  },
+  {
+    "name": "Census 2011 - All India villages/towns (PCA)",
+    "connector": "census_india",
+    "config": {
+      "level": "village_town",
+      "urbrur": 0,
+      "census_year": 2011
+    },
+    "geo_level": "village_town",
+    "theme": "Demographic",
+    "publisher": "Office of the Registrar General & Census Commissioner, India",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://censusindia.gov.in/census.website/data/population-finder",
+    "enabled": false,
+    "notes": "55,194,410 records = 11,039 paginated calls, ~63 HOURS at the API's observed 243 records/sec (the API hard-caps pages at 5,000 rows; larger limits silently return 100). ~650,000 villages/towns x 85 indicators. Disabled: this needs a deliberate multi-day run, ideally per-state so it can be resumed."
+  },
+  {
+    "name": "Census 2011 - All India wards (PCA)",
+    "connector": "census_india",
+    "config": {
+      "level": "ward",
+      "urbrur": 0,
+      "census_year": 2011
+    },
+    "geo_level": "ward",
+    "theme": "Demographic",
+    "publisher": "Office of the Registrar General & Census Commissioner, India",
+    "license": "Government Open Data License - India (verify per dataset)",
+    "source_page": "https://censusindia.gov.in/census.website/data/population-finder",
+    "enabled": false,
+    "notes": "6,991,760 records = 1,399 paginated calls, ~8 hours. Urban wards only. Disabled by default."
+  }
+]
