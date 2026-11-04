@@ -96,6 +96,10 @@ def _run(job_id: str, payload: dict | None = None) -> None:
                 _run_merge_clean_job(db, job, payload or {})
             elif job.job_type == "hmis_crawl":
                 _run_hmis_crawl_job(db, job, payload or {})
+            elif job.job_type == "scrape_scan":
+                _run_scrape_scan_job(db, job, payload or {})
+            elif job.job_type == "scrape_import":
+                _run_scrape_import_job(db, job, payload or {})
             else:
                 raise ValueError(f"Unknown job type '{job.job_type}'")
         except Exception as exc:
@@ -339,6 +343,43 @@ def _run_merge_clean_job(db: Session, job: Job, payload: dict) -> None:
     _update(
         db, job, status="succeeded", dataset_id=dataset.id,
         progress=f"Done: {dataset.row_count:,} rows x {dataset.column_count} columns",
+        result={"request": payload, **summary}, finished_at=_now(),
+    )
+
+
+def _run_scrape_scan_job(db: Session, job: Job, payload: dict) -> None:
+    """Website tab Search: read one page and its linked files into a scan."""
+    from app.modules.scraping import scan as scan_module
+
+    def progress(message: str) -> None:
+        with _lock:
+            _update(db, job, progress=message)
+
+    summary = scan_module.run_scan(db, payload["scan_id"], progress)
+    counts = summary.get("summary") or {}
+    _update(
+        db, job, status="succeeded",
+        progress=f"Done: {counts.get('tables', 0)} table(s), {counts.get('files', 0)} file(s), "
+                 f"{counts.get('blocked', 0)} couldn't be read",
+        result={"request": payload, **summary}, finished_at=_now(),
+    )
+
+
+def _run_scrape_import_job(db: Session, job: Job, payload: dict) -> None:
+    """Website tab Save: each ticked table becomes a raw + clean dataset."""
+    from app.modules.scraping import importer
+
+    def progress(message: str) -> None:
+        with _lock:
+            _update(db, job, progress=message)
+
+    summary = importer.run_import(db, payload["scan_id"], payload["survey_id"],
+                                  payload["items"], progress)
+    items = summary["items"]
+    _update(
+        db, job, status="succeeded",
+        dataset_id=items[0]["dataset_id"] if items else None,
+        progress=f"Done: saved {len(items)} table(s)",
         result={"request": payload, **summary}, finished_at=_now(),
     )
 

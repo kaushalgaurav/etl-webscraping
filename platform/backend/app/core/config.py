@@ -48,6 +48,34 @@ class Settings(BaseSettings):
     # rebuild_hmis_raw.py needs them to rebuild hmis_raw without re-downloading.
     delete_source_files_after_ingest: bool = True
 
+    # Website tab (app/modules/scraping). Limits from the design spec §4.8.
+    # Staging lives outside RAW_DIR so cleanup.purge_all() never touches a
+    # scan the admin is still reviewing.
+    scrape_dir: Path = DATA_DIR / "scrape_staging"
+    scrape_user_agent: str = "NimbliDataBot/1.0"
+    scrape_scan_seconds: int = 180
+    scrape_host_interval_seconds: float = 1.0
+    scrape_max_files: int = 25
+    scrape_file_mb: int = 30
+    scrape_total_mb: int = 200
+    scrape_zip_max_files: int = 50
+    scrape_zip_max_mb: int = 300
+    scrape_max_rows: int = 1_000_000
+    scrape_preview_rows: int = 20
+    scrape_preview_cols: int = 30
+    scrape_snippet_chars: int = 1000
+    # Unsaved scans (rows + staged files) are deleted this long after Search.
+    scrape_hold_hours: int = 24
+    # Phase 2: JavaScript pages in a headless Chromium (spec §4.3).
+    scrape_browser_enabled: bool = True
+    # False only where Chromium's sandbox can't start (e.g. running as root in Docker).
+    scrape_browser_sandbox: bool = True
+    scrape_browser_seconds: int = 60
+    scrape_browser_mb: int = 100
+    scrape_feed_max: int = 30
+    scrape_feed_mb: int = 10
+    scrape_feed_pages: int = 50
+
     model_config = {
         "env_prefix": "PLATFORM_",
         "env_file": BACKEND_DIR / ".env",

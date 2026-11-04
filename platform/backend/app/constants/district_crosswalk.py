@@ -148,10 +148,26 @@ def lookup_district(state: str, district: str) -> dict | None:
     return candidates[0] if len(candidates) == 1 else None
 
 
+def find_district(district: str) -> list[dict]:
+    """Every state's crosswalk row for a district name, for tables with no
+    state column. Exact normalised name, a known alias, or the name with
+    separators removed; never the loose "contains" match, which is only safe
+    inside one state."""
+    if is_summary_row(district):
+        return []
+    by_pair, _ = _tables()
+    target = normalise(DISTRICT_ALIASES.get(normalise(district), district))
+    squashed = _squash(target)
+    if not squashed:
+        return []
+    return [entry for (_state, name), entry in by_pair.items()
+            if name == target or _squash(name) == squashed]
+
+
 def lookup_state(state: str) -> dict | None:
     """State name and id, or None."""
     _, by_state = _tables()
     return by_state.get(normalise(canonical_state(state)))
 
 
-__all__ = ["lookup_district", "lookup_state", "normalise", "canonical_state", "TSV_PATH"]
+__all__ = ["find_district", "lookup_district", "lookup_state", "normalise", "canonical_state", "TSV_PATH"]

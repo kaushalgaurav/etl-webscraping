@@ -27,8 +27,9 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-# Tables the app creates dynamically from whatever the source supplies.
-DATA_TABLE_PREFIXES = ("census_", "hmis_", "dashboard_", "ds_")
+# Tables the app creates dynamically from whatever the source supplies, plus
+# the gemini_* tables, which ai_data/store.py creates with raw SQL.
+DATA_TABLE_PREFIXES = ("census_", "hmis_", "dashboard_", "ds_", "gemini_")
 
 
 def include_object(obj, name, type_, reflected, compare_to):

@@ -47,5 +47,10 @@ def init_db() -> None:
         orphaned = reap_orphaned_jobs(db)
         if orphaned:
             print(f"[startup] marked {orphaned} interrupted job(s) as failed")
+        # Website tab: a restart kills a running Search or Save, and unsaved
+        # scans past their hold are deleted (rows and staged files).
+        from app.modules.scraping import service as scraping_service
+
+        scraping_service.startup_cleanup(db)
     finally:
         db.close()
