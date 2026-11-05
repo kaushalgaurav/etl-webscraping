@@ -69,7 +69,7 @@ Why: data the platform needs is spread over many government and institutional pa
 **Anti-goals (what would make this a failure even if it "works")**
 
 - Junk in the warehouse: layout tables, menus, contact lists and duplicates imported because nothing stopped them. The review step exists to prevent this.
-- Getting past access controls: no CAPTCHA solving, no tools that disguise the bot as a person, no proxy rotation to dodge blocks, no ignoring robots.txt. A blocked page is reported, not defeated.
+- Getting past access controls: no CAPTCHA solving, no tools that disguise the bot as a person, no proxy rotation to dodge blocks. A blocked page is reported, not defeated. (Changed 2026-11-12: robots.txt is no longer a blocker; it is ignored unless `PLATFORM_SCRAPE_OBEY_ROBOTS=true`.)
 - The server fetching internal addresses because an admin typed one. This includes the cloud metadata service and the database host (see section 9).
 - An import that silently loses where data came from. Every imported row must trace back to the page, the finding and the time.
 
@@ -102,7 +102,7 @@ Search starts a background job (`job_type = "scrape_scan"`) that runs these stag
 
 - Only `http` and `https`.
 - Resolve the host and **refuse private, loopback, link-local and metadata addresses** (10/8, 172.16/12, 192.168/16, 127/8, ::1, 169.254/16 including 169.254.169.254, fc00::/7). Check again after every redirect and for every file download and browser request (section 9).
-- Read the site's `robots.txt`. If the page is disallowed for crawlers, stop and report "This site asks automated tools not to read this page", with the official alternative if known.
+- (Since 2026-11-12 only when `PLATFORM_SCRAPE_OBEY_ROBOTS=true`; off by default.) Read the site's `robots.txt`. If the page is disallowed for crawlers, stop and report "This site asks automated tools not to read this page", with the official alternative if known.
 - **Which requests the robots.txt check covers (my call):**
   - Checked, against the robots.txt of the host being requested: the page itself, every file download (on any host), and every feed page the scraper requests on its own when following a feed's further pages (4.3). A disallowed file or feed page becomes a `robots_disallowed` entry in "Couldn't read".
   - Not checked: requests the page makes by itself while it renders in the browser. Those are part of displaying the page the admin asked for, the same as a person's browser. So a feed the page loads on its own is still captured even when robots.txt disallows `/api/`. Only fetching *further* pages of it is subject to robots.txt.

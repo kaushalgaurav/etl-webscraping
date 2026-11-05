@@ -91,11 +91,13 @@ def test_every_code_has_exact_message():
         "Browser mode is not available on this server, so only a plain read was done.")
     assert blocked.MESSAGES["browser_failed"] == (
         "The page could not be opened in a browser, so only a plain read was done.")
+    assert blocked.MESSAGES["certificate_error"] == (
+        "The site's security certificate couldn't be verified.")
     assert set(blocked.MESSAGES) == {
         "robots_disallowed", "bot_protection", "captcha", "login_required", "form_gated",
-        "needs_browser", "private_address", "dedicated_connector", "too_large", "timeout",
+        "needs_browser", "private_address", "too_large", "timeout",
         "too_many_files", "unsupported", "http_error", "fetch_failed", "slow_response",
-        "browser_unavailable", "browser_failed"}
+        "browser_unavailable", "browser_failed", "certificate_error"}
 
 
 def test_captcha_element_id():

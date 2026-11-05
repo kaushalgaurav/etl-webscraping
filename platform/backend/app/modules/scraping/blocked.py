@@ -1,7 +1,8 @@
 """Recognise what stopped us reading a page, and say so plainly (spec §4.6).
 
-A block is reported, never worked around: no CAPTCHA solving, no disguised
-browser identity. Where the same data is known to be published officially
+What is detected here is first retried in the browser (scan.execute); only
+what the browser can't get past either is reported. No CAPTCHA solving and no
+logins. Where the same data is known to be published officially
 elsewhere, the entry carries that as a suggestion; those live in
 suggestions.json (host suffix -> text) so they can be edited without code.
 """

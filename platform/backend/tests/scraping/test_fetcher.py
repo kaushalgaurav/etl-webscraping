@@ -1,6 +1,7 @@
 import pytest
 from werkzeug.wrappers import Response
 
+from app.core.config import settings
 from app.modules.scraping import safety
 from app.modules.scraping.fetcher import Deadline, Fetcher, HostThrottle
 
@@ -40,7 +41,7 @@ def test_too_many_redirects(httpserver, loopback_ok):
     assert e.value.code == "fetch_failed"
 
 
-def test_robots_disallow_blocks(httpserver, loopback_ok):
+def test_robots_disallow_blocks(httpserver, loopback_ok, obey_robots):
     robots(httpserver, "User-agent: *\nDisallow: /private\n")
     httpserver.expect_request("/public").respond_with_data("yes")
     f = Fetcher(policy=loopback_ok)
@@ -50,14 +51,14 @@ def test_robots_disallow_blocks(httpserver, loopback_ok):
     assert f.get(httpserver.url_for("/public"), max_bytes=1000).content == b"yes"
 
 
-def test_robots_specific_agent_rule(httpserver, loopback_ok):
+def test_robots_specific_agent_rule(httpserver, loopback_ok, obey_robots):
     robots(httpserver, "User-agent: NimbliDataBot\nDisallow: /\n\nUser-agent: *\nAllow: /\n")
     with pytest.raises(safety.ScrapeBlocked) as e:
         Fetcher(policy=loopback_ok).get(httpserver.url_for("/page"), max_bytes=1000)
     assert e.value.code == "robots_disallowed"
 
 
-def test_robots_checked_on_redirect_target(httpserver, loopback_ok):
+def test_robots_checked_on_redirect_target(httpserver, loopback_ok, obey_robots):
     robots(httpserver, "User-agent: *\nDisallow: /secret\n")
     httpserver.expect_request("/a").respond_with_response(Response(status=302, headers={"Location": "/secret"}))
     with pytest.raises(safety.ScrapeBlocked) as e:
@@ -71,7 +72,7 @@ def test_missing_robots_allows(httpserver, loopback_ok):
     assert Fetcher(policy=loopback_ok).get(httpserver.url_for("/x"), max_bytes=1000).content == b"fine"
 
 
-def test_robots_fetched_once_per_host(httpserver, loopback_ok):
+def test_robots_fetched_once_per_host(httpserver, loopback_ok, obey_robots):
     no_robots(httpserver)
     httpserver.expect_request("/x").respond_with_data("fine")
     f = Fetcher(policy=loopback_ok)
@@ -82,7 +83,7 @@ def test_robots_fetched_once_per_host(httpserver, loopback_ok):
 
 def test_user_agent_sent(httpserver, loopback_ok):
     no_robots(httpserver)
-    httpserver.expect_request("/", headers={"User-Agent": "NimbliDataBot/1.0"}).respond_with_data("ok")
+    httpserver.expect_request("/", headers={"User-Agent": settings.scrape_user_agent}).respond_with_data("ok")
     assert Fetcher(policy=loopback_ok).get(httpserver.url_for("/"), max_bytes=1000).content == b"ok"
 
 
@@ -117,7 +118,7 @@ def test_expired_deadline_is_timeout(httpserver, loopback_ok):
 
 def test_default_deadline_from_settings():
     f = Fetcher()
-    assert 170 < f.deadline.remaining() <= 180
+    assert settings.scrape_scan_seconds - 10 < f.deadline.remaining() <= settings.scrape_scan_seconds
 
 
 def test_throttle_spaces_same_host():
@@ -177,3 +178,34 @@ def test_slow_answer_is_not_a_scan_timeout(httpserver, loopback_ok, monkeypatch)
         Fetcher(policy=loopback_ok).get(httpserver.url_for("/slow"), max_bytes=1000)
     assert e.value.code == "slow_response"
     assert e.value.message == "The site took longer than 1 seconds to answer."
+
+
+def test_robots_ignored_by_default(httpserver, loopback_ok):
+    robots(httpserver, "User-agent: *\nDisallow: /\n")
+    httpserver.expect_request("/page").respond_with_data("yes")
+    assert Fetcher(policy=loopback_ok).get(httpserver.url_for("/page"), max_bytes=1000).content == b"yes"
+    # Not even asked for: ignoring it saves a request (and a 1 s pause) per host.
+    assert not any(req.path == "/robots.txt" for req, _ in httpserver.log)
+
+
+def test_https_checks_certificates_with_the_os_store():
+    import truststore
+
+    adapter = safety.make_session().get_adapter("https://example.org/")
+    ctx = adapter.poolmanager.connection_pool_kw.get("ssl_context")
+    assert isinstance(ctx, truststore.SSLContext)
+    assert ctx.verify_mode.name == "CERT_REQUIRED" and ctx.check_hostname
+
+
+def test_certificate_problem_has_its_own_code(monkeypatch):
+    import requests
+
+    f = Fetcher()
+
+    def bad_cert(*_a, **_k):
+        raise requests.exceptions.SSLError("certificate verify failed")
+
+    monkeypatch.setattr(f._session, "get", bad_cert)
+    with pytest.raises(safety.ScrapeBlocked) as e:
+        f.get("https://example.org/", max_bytes=1000, check_robots=False)
+    assert e.value.code == "certificate_error"

@@ -22,6 +22,7 @@ grace period has passed. One page can therefore never hold a job worker or
 the browser lock.
 """
 import json
+import logging
 import os
 import re
 import signal
@@ -40,6 +41,7 @@ from app.modules.scraping.safety import AddressPolicy, ScrapeBlocked, message
 
 MB = 1_048_576
 BROWSER_LOCK = threading.Lock()
+log = logging.getLogger(__name__)
 
 # JSON from these is tracking, not data: analytics domains (and their
 # subdomains), and beacon endpoints named by their last path segment.
@@ -257,6 +259,7 @@ def _render_page(browser, url: str, clock: _Clock, proxy: FilteringProxy,
                 break
             page.evaluate("window.scrollTo(0, document.body ? document.body.scrollHeight : 0)")
             page.wait_for_timeout(1000)
+        _submit_form(page, clock, say)
         html = page.content()
         final_url = page.url
         feeds = _read_feeds(responses)
@@ -267,6 +270,36 @@ def _render_page(browser, url: str, clock: _Clock, proxy: FilteringProxy,
             context.close()
         except PlaywrightError:
             pass  # the watchdog killed the browser; what was read is kept
+
+
+_SUBMIT = "input[type=submit], button[type=submit], button:not([type])"
+# The first form with a drop-down and a submit button, on a page with no data
+# table yet; -1 when there is none.
+_FIND_FORM = """(submit) => {
+  if (document.querySelector('table tr td')) return -1;
+  return [...document.forms].findIndex(f => f.querySelector('select') && f.querySelector(submit));
+}"""
+
+
+def _submit_form(page, clock: _Clock, say: Callable[[str], None]) -> None:
+    """A report page that shows data only after "choose options, press Show":
+    press it once with the options as they are (usually "All" / the latest)."""
+    from playwright.sync_api import TimeoutError as PlaywrightTimeout
+
+    if clock.ms() <= 3000:
+        return
+    try:
+        index = page.evaluate(_FIND_FORM, _SUBMIT)
+        if index < 0:
+            return
+        say("Submitting the page's form with its default choices")
+        page.locator("form").nth(index).locator(_SUBMIT).first.click(timeout=clock.ms(3000))
+        try:
+            page.wait_for_load_state("networkidle", timeout=clock.ms(QUIET_MS))
+        except PlaywrightTimeout:
+            pass
+    except Exception:
+        log.debug("Form submit failed", exc_info=True)  # the page as it was is still read
 
 
 def _read_feeds(responses) -> list[Feed]:

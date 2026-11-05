@@ -18,6 +18,9 @@ from app.modules.census_warehouse import service as census_service
 from app.modules.hmis_warehouse import schema as hmis_schema
 from app.modules.hmis_warehouse import service as hmis_service
 from app.modules.jobs import lineage as job_lineage
+from app.modules.web_warehouse import schema as web_schema
+from app.modules.web_warehouse import service as web_service
+from app.modules.web_warehouse.years import financial_years
 
 router = APIRouter(prefix="/warehouse", tags=["warehouse"])
 
@@ -25,12 +28,14 @@ router = APIRouter(prefix="/warehouse", tags=["warehouse"])
 class Connector(str, Enum):
     census = "census"
     hmis = "hmis"
+    web = "web"
 
 
 # connector -> (service module, schema module)
 _CONNECTORS: dict[Connector, tuple[ModuleType, ModuleType]] = {
     Connector.census: (census_service, census_schema),
     Connector.hmis: (hmis_service, hmis_schema),
+    Connector.web: (web_service, web_schema),
 }
 
 ConnectorParam = Path(..., description="Which source's warehouse to act on.")
@@ -38,6 +43,33 @@ SurveyParam = Query(
     default=None,
     description="Only act on this survey's rows. Omit to act on every survey.",
 )
+TableParam = Query(
+    default=None,
+    description="web only: act on this one Website table (its web_table_id).",
+)
+
+
+def _table_kwargs(connector: Connector, table: str | None) -> dict:
+    """`table` is passed through for web and refused for every other connector."""
+    if table is None:
+        return {}
+    if connector is not Connector.web:
+        raise HTTPException(status_code=400, detail="'table' applies only to the web connector.")
+    return {"table": table}
+
+
+# Static web routes first, so "/web/tables" never reaches "/{connector}/...".
+@router.get("/web/tables")
+def web_tables(survey_id: int = Query(..., description="The survey whose Website tables to list."),
+               db: Session = Depends(get_db)) -> list[dict]:
+    """A survey's saved Website tables: status, match summary, and whether Merge can use them."""
+    return web_service.list_tables(db, survey_id)
+
+
+@router.get("/web/years")
+def web_years() -> list[str]:
+    """The financial years a Website table can be saved under, in HMIS's form."""
+    return financial_years()
 
 
 def _service(connector: Connector) -> ModuleType:
@@ -74,6 +106,7 @@ def warehouse_clean(
     connector: Connector = ConnectorParam,
     survey_id: int | None = SurveyParam,
     operations: list[str] | None = Body(default=None, embed=True),
+    table: str | None = TableParam,
     db: Session = Depends(get_db),
 ) -> dict:
     """Rebuild the clean layer from raw. `operations` defaults to the standard set.
@@ -81,7 +114,8 @@ def warehouse_clean(
     With `survey_id`, only that survey's rows are rebuilt.
     """
     try:
-        return _service(connector).build_clean(db, operations, survey_id=survey_id)
+        extra = _table_kwargs(connector, table)
+        return _service(connector).build_clean(db, operations, survey_id=survey_id, **extra)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -89,13 +123,15 @@ def warehouse_clean(
 @router.post("/{connector}/master")
 def warehouse_master(connector: Connector = ConnectorParam,
                      survey_id: int | None = SurveyParam,
+                     table: str | None = TableParam,
                      db: Session = Depends(get_db)) -> dict:
     """Rebuild the master layer from clean — one row per entity per survey, newest wins.
 
     With `survey_id`, only that survey's rows are rebuilt.
     """
     try:
-        return _service(connector).build_master(db, survey_id=survey_id)
+        extra = _table_kwargs(connector, table)
+        return _service(connector).build_master(db, survey_id=survey_id, **extra)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -103,12 +139,14 @@ def warehouse_master(connector: Connector = ConnectorParam,
 @router.post("/{connector}/rebuild")
 def warehouse_rebuild(connector: Connector = ConnectorParam,
                       survey_id: int | None = SurveyParam,
+                      table: str | None = TableParam,
                       db: Session = Depends(get_db)) -> dict:
     """Run clean and master back to back, the usual step after a new fetch."""
     service = _service(connector)
+    extra = _table_kwargs(connector, table)
     try:
-        return {"clean": service.build_clean(db, survey_id=survey_id),
-                "master": service.build_master(db, survey_id=survey_id)}
+        return {"clean": service.build_clean(db, survey_id=survey_id, **extra),
+                "master": service.build_master(db, survey_id=survey_id, **extra)}
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -178,6 +216,11 @@ def read_warehouse_rows(
         # the BIGINT column rather than as text.
         filters[survey.SURVEY_COL] = survey_id
     ids = _job_dataset_ids(db, job_id) if job_id else None
+    if connector is Connector.web:
+        # Web layer rows are scoped by their table, not by a dataset id.
+        if ids is not None:
+            ids = web_service.layer_ids_for_datasets(db, ids) or [-1]
+        order_by = order_by or ["id"]
     try:
         return warehouse_rows.read_rows(
             db, layer or schema.RAW, allowed_layers=schema.LAYERS,

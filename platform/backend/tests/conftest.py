@@ -20,6 +20,15 @@ import pytest  # noqa: E402
 import app.models  # noqa: E402,F401  (registers every table)
 from app.db.base import Base  # noqa: E402
 from app.db.session import SessionLocal, engine  # noqa: E402
+from sqlalchemy import event  # noqa: E402
+
+
+@event.listens_for(engine, "connect")
+def _enforce_foreign_keys(dbapi_connection, _record):
+    """Postgres enforces foreign keys and production runs on it; SQLite only
+    does when asked, and a test that can't see a broken FK proves nothing."""
+    dbapi_connection.execute("PRAGMA foreign_keys=ON")
+
 
 Base.metadata.create_all(engine)
 
@@ -62,3 +71,11 @@ def browser_ok(_chromium_problem, monkeypatch):
     from app.core.config import settings
 
     monkeypatch.setattr(settings, "scrape_browser_enabled", True)
+
+
+@pytest.fixture
+def obey_robots(monkeypatch):
+    """robots.txt is ignored by default; these tests turn obeying it back on."""
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "scrape_obey_robots", True, raising=False)

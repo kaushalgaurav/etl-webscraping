@@ -3,6 +3,7 @@ import socket
 
 import pytest
 
+from app.core.config import settings
 from app.modules.scraping import safety
 
 
@@ -31,15 +32,6 @@ def test_check_url_rejects(url):
 def test_check_url_accepts_http_and_https():
     safety.check_url("http://rbi.org.in/")
     safety.check_url("https://rbi.org.in/a?b=1")
-
-
-def test_dedicated_hosts():
-    assert safety.dedicated_connector("https://hmis.mohfw.gov.in/#!/standard")
-    assert safety.dedicated_connector("https://censusindia.gov.in/census.website/")
-    assert safety.dedicated_connector("https://api.data.gov.in/resource/x")
-    assert safety.dedicated_connector("https://data.gov.in/catalog/x")
-    assert not safety.dedicated_connector("https://rbi.org.in/")
-    assert not safety.dedicated_connector("https://notdata.gov.in.example.com/")
 
 
 def test_session_refuses_loopback_server(httpserver):
@@ -71,7 +63,7 @@ def test_permissive_policy_allows_local(httpserver, loopback_ok):
 
 
 def test_session_sends_honest_user_agent(httpserver, loopback_ok):
-    httpserver.expect_request("/", headers={"User-Agent": "NimbliDataBot/1.0"}).respond_with_data("ok")
+    httpserver.expect_request("/", headers={"User-Agent": settings.scrape_user_agent}).respond_with_data("ok")
     assert safety.make_session(loopback_ok).get(httpserver.url_for("/"), timeout=5).text == "ok"
 
 

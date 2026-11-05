@@ -4,7 +4,8 @@ Fetcher.get() is the only way scraping code reaches the network. On top of
 the address guard (safety.make_session) it adds, per spec §4.1, §4.8, §9:
   - manual redirects (at most 5), each hop re-checked: URL, robots.txt, and
     the address guard again at connect time;
-  - robots.txt, fetched once per host and obeyed for agent "NimbliDataBot";
+  - robots.txt, only when PLATFORM_SCRAPE_OBEY_ROBOTS is on (off by default);
+  - one retry after a 429/503, waiting as the site's Retry-After asks (capped);
   - one request per second per host, shared by every scan in the process;
   - a whole-scan deadline that also caps each request's timeout;
   - a byte cap, checked against Content-Length and again while streaming.
@@ -94,6 +95,20 @@ def _filename(url: str, disposition: str | None) -> str:
     return name or "download"
 
 
+RETRY_STATUSES = (429, 503)
+RETRY_WAIT_DEFAULT = 5.0
+RETRY_WAIT_MAX = 30.0
+
+
+def _retry_after(header: str | None) -> float:
+    """Seconds to wait from a Retry-After header (seconds form), capped."""
+    try:
+        wait = float(header) if header is not None else RETRY_WAIT_DEFAULT
+    except ValueError:
+        wait = RETRY_WAIT_DEFAULT  # an HTTP date: not worth parsing for one retry
+    return min(max(wait, 0.0), RETRY_WAIT_MAX)
+
+
 def _seconds(n: float) -> int:
     return int(round(n))
 
@@ -127,13 +142,25 @@ class Fetcher:
         return parser is None or parser.can_fetch(ROBOTS_AGENT, url)
 
     # GET --------------------------------------------------------------------
-    def get(self, url: str, *, max_bytes: int, check_robots: bool = True) -> Fetched:
+    def get(self, url: str, *, max_bytes: int, check_robots: bool = True,
+            referer: str | None = None) -> Fetched:
+        """`referer`: the page a file link was found on. Some sites only serve a
+        download to a request that says where it came from."""
         current = url
+        retried = False
         for _hop in range(MAX_REDIRECTS + 1):
             check_url(current)
-            if check_robots and not self.allowed_by_robots(current):
+            if check_robots and settings.scrape_obey_robots and not self.allowed_by_robots(current):
                 raise ScrapeBlocked("robots_disallowed", message("robots_disallowed"), current)
-            resp = self._send(current)
+            resp = self._send(current, referer)
+            if resp.status_code in RETRY_STATUSES and not retried:
+                # "Too many requests" / "busy": wait as asked (capped), try once more.
+                retried = True
+                wait = _retry_after(resp.headers.get("Retry-After"))
+                resp.close()
+                if wait < self.deadline.remaining():
+                    time.sleep(wait)
+                    resp = self._send(current, referer)
             if resp.is_redirect and resp.headers.get("Location"):
                 resp.close()
                 current = urljoin(current, resp.headers["Location"])
@@ -157,7 +184,7 @@ class Fetcher:
         return ScrapeBlocked(
             "slow_response", message("slow_response", n=settings.request_timeout_seconds), url)
 
-    def _send(self, url: str) -> requests.Response:
+    def _send(self, url: str, referer: str | None = None) -> requests.Response:
         if self.deadline.expired():
             raise ScrapeBlocked(
                 "timeout", message("timeout", n=settings.scrape_scan_seconds), url)
@@ -167,9 +194,13 @@ class Fetcher:
             raise ScrapeBlocked(
                 "timeout", message("timeout", n=settings.scrape_scan_seconds), url)
         try:
-            return self._session.get(url, allow_redirects=False, stream=True, timeout=timeout)
+            headers = {"Referer": referer} if referer else None
+            return self._session.get(url, allow_redirects=False, stream=True, timeout=timeout,
+                                     headers=headers)
         except requests.Timeout as exc:
             raise self._timed_out(url) from exc
+        except requests.exceptions.SSLError as exc:
+            raise ScrapeBlocked("certificate_error", message("certificate_error"), url) from exc
         except requests.RequestException as exc:
             raise ScrapeBlocked("fetch_failed", message("fetch_failed"), url) from exc
 

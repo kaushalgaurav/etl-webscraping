@@ -395,7 +395,21 @@ curl -s -X POST "$BASE/sources/run-all"
 
 ## 5. Warehouse
 
-One set of addresses for both warehouses: replace `{connector}` with `census` or `hmis`. Every endpoint takes an optional `survey_id` query parameter; without it, it acts on every survey.
+One set of addresses for every warehouse: replace `{connector}` with `census`, `hmis` or `web` (saved Website tables). Every endpoint takes an optional `survey_id` query parameter; without it, it acts on every survey.
+
+For `web`, `clean`, `master` and `rebuild` also take `table` (a `web_table_id`) to act on one Website table; other connectors answer 400 to it. Website layers are `web_raw` (each value as found), `web_clean` (numbers, matched to the district list) and `web_master` (matched rows with a year).
+
+### `GET /warehouse/web/tables?survey_id=` and `GET /warehouse/web/years`
+
+`/tables` lists a survey's Website tables for the Fetched Data rows and the Merge tick boxes: `web_table_id`, `name`, `page_url`, `state_name` / `state_column`, `year` / `year_column`, `indicator_column`, `status` (`saved` → `cleaned`), `rows`, `values`, `match_summary` (`matched`, `total`, `unmatched`, `year_unrecognised`, `duplicate_places`), `mergeable` and `reason` (`no district column`, `not cleaned`, `no district matched`, `no year recognised`, or null). `survey_id` is required.
+
+`/years` lists the financial years a table can be saved under (`2005-2006` … the current one), the same form as HMIS's `report_year`.
+
+```bash
+curl -s "$BASE/warehouse/web/tables?survey_id=1"
+curl -s -X POST "$BASE/warehouse/web/clean?survey_id=1&table=WEB_TABLE_ID"
+curl -s -X POST "$BASE/warehouse/web/master?survey_id=1"
+```
 
 ### `GET /warehouse/{connector}`
 
@@ -512,7 +526,9 @@ curl -s "$BASE/datasets/DATASET_ID/rows?limit=10&offset=0"
 
 ## 7. Merging
 
-Joins Census and HMIS master tables for one survey into `dashboard_master`. Both have to be built (rebuild) for that survey first.
+Joins Census, HMIS and (optionally) chosen Website tables' master tables for one survey into `dashboard_master`. Each has to be built (rebuild / master) for that survey first.
+
+With `web_tables`, HMIS and Website rows join on district **and year** (one shared `year` column), and Census joins on district. Website columns are named `web_<table name>_<indicator>`; the same table saved for several years fills the same columns. Merge refuses when `dashboard_master` would pass 1,400 columns, or when two ticked tables with the same name share an indicator for the same year.
 
 ### `POST /datasets/merge` (202, background job)
 
@@ -523,6 +539,7 @@ Give **either** `survey_id` (with optional `connectors`) **or** `dataset_ids`, n
 | `survey_id` | integer | The survey to merge |
 | `connectors` | list of strings | e.g. `["census", "hmis"]`; default every warehouse with rows for that survey |
 | `dataset_ids` | list of strings | Merge these specific datasets instead |
+| `web_tables` | list of strings | Website tables to include (`web_table_id`s from `GET /warehouse/web/tables`). Needs `survey_id` |
 | `join_key` | string | Column or field name to join on, e.g. `district`. Default: worked out automatically |
 | `name` | string | Name for the record of this run |
 
@@ -940,11 +957,14 @@ curl -s "$BASE/ai-data/export?survey_id=101&format=csv&shape=wide" -o gemini-sur
 
 The **Website** tab: give any page address, see every table, file and text found on it, then save only the ticked tables. It reads plain pages and the files they link to (CSV, TSV, Excel, JSON, PDF, Word, ZIP). Pages that build their content with JavaScript are opened in a headless browser, which also captures the data the page loads in the background ("data feeds") and files from Export / Download buttons.
 
-Flow: `POST /scrape/scan` → poll `GET /jobs/{id}` → `GET /scrape/scans/{scan_id}` (the review screen) → `POST /scrape/scans/{scan_id}/import` → poll `GET /jobs/{id}`.
+Flow: `POST /scrape/scan` → poll `GET /jobs/{id}` → `GET /scrape/scans/{scan_id}` (the review screen) → `POST /scrape/scans/{scan_id}/import` → poll `GET /jobs/{id}` → `POST /warehouse/web/clean` (the Clean button) → `POST /datasets/merge` with `web_tables`.
+
+All scan and finding ids are UUIDs. A malformed id is answered 404.
 
 - An unsaved search is deleted 24 hours after it finishes (`PLATFORM_SCRAPE_HOLD_HOURS`).
-- After a successful Save, only the ticked tables remain, as datasets. The staged files and unticked findings are deleted.
-- Needs the `scrape_scans` / `scrape_findings` tables: run `venv/bin/alembic upgrade head` once.
+- After a successful Save, each ticked table is a Website table: one `web_tables` row plus its values in `web_raw`, and a record card in `datasets` (`table_name` `web_raw`). The staged files and unticked findings are deleted.
+- Saving the same table (same survey, page, place on the page and year) again replaces that year; another year is added beside it.
+- Needs migrations `b32eb5b4e8f3` and `05f280b1545e`: run `venv/bin/alembic upgrade head`.
 
 ### `POST /scrape/scan` (202, background job)
 
@@ -1018,26 +1038,45 @@ Save: send **every ticked table in one request**.
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `survey_id` | integer | yes | Stamped on both saved datasets. |
-| `items` | array | yes (at least 1) | `[{"finding_id": "...", "name": "optional dataset name"}]`. Tables only. |
+| `survey_id` | integer | yes | The survey the tables are filed under. |
+| `items` | array | yes (at least 1) | One object per ticked table (tables only), fields below. |
+
+Each item:
+
+| Field | Required | Notes |
+|---|---|---|
+| `finding_id` | yes | |
+| `name` | no | Defaults to `<site> - <title>`. Also names the table's columns after Merge, so keep it the same across years |
+| `place_column` | no | Column holding the districts; defaults to the review screen's guess (`signals.joinable.place_column`) |
+| `state_name` or `state_column` | one, when there is a district column | `state_column` defaults to the guessed `signals.joinable.state_column` |
+| `year` or `year_column` | exactly one | `year` from `GET /warehouse/web/years`, e.g. `2019-2020` |
+| `columns` | no | Value columns to keep (e.g. one year's columns when years are in the headings); omitted = all |
+| `indicator_column` | no | Long tables only (one row per district **per indicator**, like NFHS district files): the column naming each row's indicator. Each value is filed under that name, so every indicator becomes its own column after Merge. Keep one value column with `columns` (e.g. `["NFHS-5"]`); with several, each value is named `<indicator> · <column>`. Rows with no indicator name are skipped |
 
 ```bash
 curl -s -X POST "$BASE/scrape/scans/SCAN_ID/import" -H "Content-Type: application/json" \
-  -d '{"survey_id": 7, "items": [{"finding_id": "FINDING_ID", "name": "Bihar districts"}]}'
+  -d '{"survey_id": 7, "items": [{"finding_id": "FINDING_ID", "name": "Bihar districts",
+                                   "state_name": "Bihar", "year": "2019-2020"}]}'
 ```
 
 Reply: a job (`job_type: "scrape_import"`). When it succeeds, `result.items` lists, for each table:
-- `raw_dataset_id`
-- `dataset_id` (the cleaned copy)
-- `rows`
-- `columns`
+- `finding_id`
+- `web_table_id`
+- `dataset_id` (the record card, connector `web_table`, `web_feed` or `web_file`)
+- `rows`, `values`
+- `replaced` (true when the same table and year was saved before)
 
-The datasets are ordinary ones (connector `web_table`, `web_feed` or `web_file`), visible under `/datasets`.
+Nothing is cleaned yet: the next step is `POST /warehouse/web/clean`.
 
 Status codes:
 - 404: unknown scan.
 - 409: the scan isn't finished, is already being saved (a double click), or was already saved.
-- 422: no items, a duplicate item, a finding from another scan, or a finding that isn't a table.
+- 422: no items, a duplicate item, a finding from another scan, a finding that isn't a table, or a bad item:
+  - "Choose a year, or the column that holds the year."
+  - "Year must be a financial year like 2019-2020."
+  - "Column '<name>' is not in this table."
+  - "Choose the state, or the column that holds it."
+  - "Unknown state '<name>'."
 
 ### `DELETE /scrape/scans/{scan_id}` (204)
 

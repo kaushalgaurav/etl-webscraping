@@ -16,6 +16,7 @@ from app.models.common import utcnow
 from app.modules.census_warehouse import schema as census_schema
 from app.modules.hmis_warehouse import schema as hmis_schema
 from app.modules.merging import schema as merging_schema
+from app.modules.web_warehouse import schema as web_schema
 
 
 # PostgreSQL truncates identifiers to 63 bytes, which can silently make two
@@ -314,6 +315,11 @@ def _scope(dataset: Dataset) -> tuple[str, dict]:
     layer table it filters on the stamped dataset id, so every caller that goes
     through load_dataframe/load_page keeps seeing one dataset.
     """
+    if web_schema.is_layer_table(dataset.table_name):
+        # A Website record card: its rows are those of the web_tables row it
+        # belongs to (the web layers carry no _dataset_id).
+        return (f" WHERE web_table_id IN (SELECT id FROM {web_schema.TABLES} "
+                "WHERE dataset_id = :_ds)", {"_ds": dataset.id})
     if not _is_shared(dataset.table_name):
         return "", {}
     quote = engine.dialect.identifier_preparer.quote

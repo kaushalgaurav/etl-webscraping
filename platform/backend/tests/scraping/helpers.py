@@ -45,6 +45,6 @@ def standard_site(httpserver, robots: str | None = None):
 def run(db, url: str, policy, include_files: bool = True, fetcher: Fetcher | None = None,
         render: str = "auto"):
     scan = service.create_scan(db, url, include_files, render)
-    scan_module.run_scan(db, scan.id, fetcher=fetcher or Fetcher(policy=policy))
+    scan_module.run_scan(db, scan.key, fetcher=fetcher or Fetcher(policy=policy))
     db.refresh(scan)
     return scan

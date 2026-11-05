@@ -62,7 +62,7 @@ def test_collect_stops_on_repeat(httpserver, loopback_ok):
     assert result.pages == 1 and len(result.tables[0].df) == 10
 
 
-def test_collect_respects_robots(httpserver, loopback_ok):
+def test_collect_respects_robots(httpserver, loopback_ok, obey_robots):
     helpers.serve(httpserver, robots="User-agent: *\nDisallow: /api/\n")
     feed = Feed(httpserver.url_for("/api/rows") + "?page=1", "GET", {"data": records(0, 10)})
     result = collect(feed, loopback_ok)

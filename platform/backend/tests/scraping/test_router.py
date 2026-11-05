@@ -13,6 +13,8 @@ from app.modules.scraping.fetcher import Fetcher
 from tests.scraping import helpers
 
 client = TestClient(app)
+# What every Save item needs now (spec §5.1).
+SAVE = {"year": "2022-2023", "state_name": "Bihar"}
 
 
 @pytest.fixture
@@ -42,23 +44,26 @@ def finish_scan(db, httpserver) -> str:
 
 
 def table_ids(db, scan_id):
-    return [f.id for f in db.query(ScrapeFinding).filter(
-        ScrapeFinding.scan_id == scan_id, ScrapeFinding.kind.in_(service.TABLE_KINDS))
+    scan = service.get_scan(db, scan_id)
+    return [f.key for f in db.query(ScrapeFinding).filter(
+        ScrapeFinding.scan_id == scan.id, ScrapeFinding.kind.in_(service.TABLE_KINDS))
         .order_by(ScrapeFinding.position)]
+
+
+def text_key(db, scan_id):
+    scan = service.get_scan(db, scan_id)
+    return db.query(ScrapeFinding).filter_by(scan_id=scan.id, kind="text").one().key
 
 
 def test_scan_returns_202_with_scan_id(db, no_workers):
     job = start_scan("https://example.gov.in/stats")
     assert job["job_type"] == "scrape_scan" and job["status"] == "queued"
-    scan = db.get(ScrapeScan, job["result"]["request"]["scan_id"])
+    scan = service.get_scan(db, job["result"]["request"]["scan_id"])
     assert scan.status == "running" and scan.job_id == job["id"]
 
 
 def test_scan_rejects(no_workers):
     assert client.post("/scrape/scan", json={"url": "ftp://x.gov.in/a"}).status_code == 422
-    resp = client.post("/scrape/scan", json={"url": "https://hmis.mohfw.gov.in/"})
-    assert resp.status_code == 422
-    assert resp.json()["detail"] == "This source has a dedicated connector; use the URL tab."
     assert client.post("/scrape/scan", json={}).status_code == 422
 
 
@@ -76,7 +81,7 @@ def test_job_runs_scan_end_to_end(db, httpserver, no_workers, local_fetcher):
 
 def test_import_double_click(db, httpserver, no_workers, local_fetcher):
     scan_id = finish_scan(db, httpserver)
-    body = {"survey_id": 7, "items": [{"finding_id": table_ids(db, scan_id)[0]}]}
+    body = {"survey_id": 7, "items": [{"finding_id": table_ids(db, scan_id)[0], **SAVE}]}
     first = client.post(f"/scrape/scans/{scan_id}/import", json=body)
     second = client.post(f"/scrape/scans/{scan_id}/import", json=body)
     assert first.status_code == 202 and first.json()["job_type"] == "scrape_import"
@@ -90,14 +95,14 @@ def test_import_job_and_lineage(db, httpserver, no_workers, local_fetcher):
     scan_id = finish_scan(db, httpserver)
     picks = table_ids(db, scan_id)[:2]
     job = client.post(f"/scrape/scans/{scan_id}/import",
-                      json={"survey_id": 7, "items": [{"finding_id": f} for f in picks]}).json()
+                      json={"survey_id": 7, "items": [{"finding_id": f, **SAVE} for f in picks]}).json()
     jobs_service._run(job["id"], job["result"]["request"])
     stored = db.get(Job, job["id"])
     db.refresh(stored)
     assert stored.status == "succeeded", stored.error
-    clean_ids = [i["dataset_id"] for i in stored.result["items"]]
-    assert stored.dataset_id == clean_ids[0]
-    assert lineage.dataset_ids_for_job(db, job["id"]) == clean_ids
+    card_ids = [i["dataset_id"] for i in stored.result["items"]]
+    assert stored.dataset_id == card_ids[0]
+    assert lineage.dataset_ids_for_job(db, job["id"]) == card_ids
     assert client.get(f"/scrape/scans/{scan_id}").json()["status"] == "imported"
 
 
@@ -107,7 +112,7 @@ def test_import_request_errors(db, httpserver, no_workers, local_fetcher):
                        json={"survey_id": 7, "items": [{"finding_id": "x"}]}).status_code == 404
     assert client.post(f"/scrape/scans/{scan_id}/import",
                        json={"survey_id": 7, "items": []}).status_code == 422
-    text_id = db.query(ScrapeFinding).filter_by(scan_id=scan_id, kind="text").one().id
+    text_id = text_key(db, scan_id)
     assert client.post(f"/scrape/scans/{scan_id}/import",
                        json={"survey_id": 7, "items": [{"finding_id": text_id}]}).status_code == 422
 
@@ -115,7 +120,7 @@ def test_import_request_errors(db, httpserver, no_workers, local_fetcher):
 def test_rows_download_delete_status_codes(db, httpserver, no_workers, local_fetcher):
     scan_id = finish_scan(db, httpserver)
     table = table_ids(db, scan_id)[0]
-    text_id = db.query(ScrapeFinding).filter_by(scan_id=scan_id, kind="text").one().id
+    text_id = text_key(db, scan_id)
     base = f"/scrape/scans/{scan_id}"
 
     rows = client.get(f"{base}/findings/{table}/rows?limit=5&offset=0")
@@ -138,7 +143,7 @@ def test_rows_download_delete_status_codes(db, httpserver, no_workers, local_fet
 def test_saved_scan_conflicts(db, httpserver, no_workers, local_fetcher):
     scan_id = finish_scan(db, httpserver)
     table = table_ids(db, scan_id)[0]
-    scan = db.get(ScrapeScan, scan_id)
+    scan = service.get_scan(db, scan_id)
     scan.status = "imported"
     db.commit()
     assert client.get(f"/scrape/scans/{scan_id}/findings/{table}/rows").status_code == 409
@@ -162,11 +167,18 @@ def test_import_rejects_overlong_name(db, httpserver, no_workers, local_fetcher)
 
 def test_scan_accepts_render_option(db, no_workers):
     job = client.post("/scrape/scan", json={"url": "https://example.gov.in/a", "render": "always"}).json()
-    assert db.get(ScrapeScan, job["result"]["request"]["scan_id"]).options["render"] == "always"
+    assert service.get_scan(db, job["result"]["request"]["scan_id"]).options["render"] == "always"
     assert job["result"]["request"]["render"] == "always"
     assert client.post("/scrape/scan", json={"url": "https://example.gov.in/a",
                                              "render": "sometimes"}).status_code == 422
     job = start_scan("https://example.gov.in/b")
     scan_id = job["result"]["request"]["scan_id"]
-    assert db.get(ScrapeScan, scan_id).options["render"] == "auto"
+    assert service.get_scan(db, scan_id).options["render"] == "auto"
     assert client.get(f"/scrape/scans/{scan_id}").json()["rendered_in_browser"] is False
+
+
+def test_bad_scan_id_is_404():
+    import uuid
+    assert client.get("/scrape/scans/not-a-uuid").status_code == 404
+    assert client.get(f"/scrape/scans/{uuid.uuid4()}").status_code == 404
+    assert client.delete("/scrape/scans/not-a-uuid").status_code == 404

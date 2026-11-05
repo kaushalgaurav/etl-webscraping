@@ -32,7 +32,7 @@ def test_page_with_table_csv_and_layout(db, httpserver, loopback_ok):
 
     assert len(tables) == 3
     assert nav.suggested == "skip" and nav.signals["looks_like_layout"] is True
-    assert html.signals["duplicate_of"] == csv.id and html.suggested == "skip"
+    assert html.signals["duplicate_of"] == csv.key and html.suggested == "skip"
     assert csv.suggested == "keep" and csv.parent_id == by_kind["file"].id
     file = by_kind["file"]
     assert set(file.details) >= {"name", "url", "content_type", "bytes", "extracted"}
@@ -41,7 +41,7 @@ def test_page_with_table_csv_and_layout(db, httpserver, loopback_ok):
     for t in tables:
         assert len(t.preview) <= 20 and all(len(r) <= 30 for r in t.preview)
         assert t.column_names and t.rows and t.columns and t.content_hash
-        assert store.resolve(scan.id, t.storage_path).exists()
+        assert store.resolve(scan.key, t.storage_path).exists()
     assert csv.rows == 38 and csv.preview[0] == ["District 0", "0"]  # CSV values as published
     assert scan.status == "done"
     assert scan.summary == {"tables": 3, "files": 1, "text": 1, "blocked": 0, "suggested_keep": 1,
@@ -58,7 +58,7 @@ def test_url_is_a_file(db, httpserver, loopback_ok):
     assert kinds == ["file", "file_table"] and scan.status == "done"
 
 
-def test_robots_disallowed_page(db, httpserver, loopback_ok):
+def test_robots_disallowed_page(db, httpserver, loopback_ok, obey_robots):
     url = helpers.standard_site(httpserver, robots="User-agent: *\nDisallow: /\n")
     scan = helpers.run(db, url, loopback_ok)
     assert scan.status == "done" and findings(db, scan) == []
@@ -66,7 +66,7 @@ def test_robots_disallowed_page(db, httpserver, loopback_ok):
     assert scan.summary["tables"] == 0 and scan.summary["blocked"] == 1
 
 
-def test_disallowed_file_only(db, httpserver, loopback_ok):
+def test_disallowed_file_only(db, httpserver, loopback_ok, obey_robots):
     url = helpers.standard_site(httpserver, robots="User-agent: *\nDisallow: /files/\n")
     scan = helpers.run(db, url, loopback_ok)
     assert codes(scan) == ["robots_disallowed"] and scan.blocked[0]["what"].endswith("/files/data.csv")
@@ -136,7 +136,7 @@ def test_deadline_stops_cleanly(db, httpserver, loopback_ok):
     url = helpers.standard_site(httpserver)
     scan = helpers.run(db, url, loopback_ok, fetcher=Fetcher(policy=loopback_ok, deadline=Deadline(0)))
     assert scan.status == "done" and codes(scan) == ["timeout"]
-    assert scan.blocked[0]["message"] == "Search stopped after 180 seconds."
+    assert scan.blocked[0]["message"] == f"Search stopped after {settings.scrape_scan_seconds} seconds."
 
 
 def test_row_cap_truncates(db, httpserver, loopback_ok, monkeypatch):
@@ -147,7 +147,7 @@ def test_row_cap_truncates(db, httpserver, loopback_ok, monkeypatch):
     scan = helpers.run(db, httpserver.url_for("/big.csv"), loopback_ok)
     table = [f for f in findings(db, scan) if f.kind == "file_table"][0]
     assert table.rows == 10 and table.signals["truncated"] is True
-    assert len(store.read_table(scan.id, table.storage_path)) == 10
+    assert len(store.read_table(scan.key, table.storage_path)) == 10
 
 
 def test_unexpected_error_marks_scan_failed(db, httpserver, loopback_ok, monkeypatch):
@@ -161,7 +161,7 @@ def test_unexpected_error_marks_scan_failed(db, httpserver, loopback_ok, monkeyp
     from app.modules.scraping import scan as scan_module
 
     with pytest.raises(RuntimeError):
-        scan_module.run_scan(db, scan.id, fetcher=Fetcher(policy=loopback_ok))
+        scan_module.run_scan(db, scan.key, fetcher=Fetcher(policy=loopback_ok))
     db.refresh(scan)
     assert scan.status == "failed" and "parser exploded" in scan.error
 
@@ -169,9 +169,6 @@ def test_unexpected_error_marks_scan_failed(db, httpserver, loopback_ok, monkeyp
 def test_create_scan_rejects():
     with pytest.raises(service.ScanRequestError):
         service.create_scan(None, "ftp://x.gov.in/a", True)
-    with pytest.raises(service.ScanRequestError) as e:
-        service.create_scan(None, "https://hmis.mohfw.gov.in/#!/", True)
-    assert str(e.value) == "This source has a dedicated connector; use the URL tab."
 
 
 def test_reap_interrupted_scans(db):
@@ -195,13 +192,13 @@ def test_purge_expired(db):
     db.flush()
     db.add(ScrapeFinding(scan_id=old.id, kind="text", title="t", locator={}))
     db.commit()
-    store.write_text(old.id, "t", "x")
-    old_id = old.id
+    store.write_text(old.key, "t", "x")
+    old_id, old_key = old.id, old.key
     service.purge_expired(db, now)
     db.expire_all()
     assert db.get(ScrapeScan, old_id) is None
     assert db.query(ScrapeFinding).filter_by(scan_id=old_id).count() == 0
-    assert not store.scan_dir(old_id).exists()
+    assert not store.scan_dir(old_key).exists()
     assert db.get(ScrapeScan, fresh.id) is not None and db.get(ScrapeScan, saved.id) is not None
 
 
@@ -375,11 +372,7 @@ def test_rendered_page_stages_tables_feeds_and_downloads(db, httpserver, loopbac
     assert feed_finding.rows == 38 and feed_finding.locator["feed_url"] == feed.url
 
 
-CAPTCHA_DOWNLOADS = helpers.page('<div class="g-recaptcha"></div><a href="/files/data.csv">CSV</a>')
-
-
-@pytest.mark.parametrize("mode", ["auto", "always"])
-def test_captcha_page_is_not_opened_in_browser(db, httpserver, loopback_ok, monkeypatch, mode):
+def test_captcha_page_with_data_is_read_without_the_browser(db, httpserver, loopback_ok, monkeypatch):
     monkeypatch.setattr(settings, "scrape_browser_enabled", True)
     calls = []
     monkeypatch.setattr(discover_browser, "render", lambda *a, **k: calls.append(a))
@@ -387,11 +380,9 @@ def test_captcha_page_is_not_opened_in_browser(db, httpserver, loopback_ok, monk
     httpserver.expect_request("/stats").respond_with_data(
         helpers.page('<div class="g-recaptcha"></div>', helpers.district_table_html(),
                      '<a href="/files/data.csv">CSV</a>'), content_type="text/html")
-    httpserver.expect_request("/q").respond_with_data(CAPTCHA_DOWNLOADS, content_type="text/html")
     httpserver.expect_request("/files/data.csv").respond_with_data(helpers.district_csv(), content_type="text/csv")
-    helpers.run(db, httpserver.url_for("/stats"), loopback_ok, render=mode)
-    helpers.run(db, httpserver.url_for("/q"), loopback_ok, render=mode)
-    assert calls == []
+    scan = helpers.run(db, httpserver.url_for("/stats"), loopback_ok)
+    assert calls == [] and any(f.title == "District beds" for f in findings(db, scan))
 
 
 def test_feeds_count_against_the_scan_byte_budget(db, httpserver, loopback_ok, monkeypatch):
@@ -407,3 +398,10 @@ def test_feeds_count_against_the_scan_byte_budget(db, httpserver, loopback_ok, m
     feed_urls = [f.locator["feed_url"] for f in findings(db, scan) if f.kind == "feed"]
     assert feed_urls == [small.url]
     assert codes(scan) == ["too_large"]
+
+
+def test_robots_disallow_does_not_stop_a_search_by_default(db, httpserver, loopback_ok):
+    url = helpers.standard_site(httpserver, robots="User-agent: *\nDisallow: /\n")
+    scan = helpers.run(db, url, loopback_ok)
+    assert scan.status == "done" and "robots_disallowed" not in codes(scan)
+    assert any(f.kind == "html_table" for f in findings(db, scan))

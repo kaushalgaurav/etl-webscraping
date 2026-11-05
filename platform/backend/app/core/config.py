@@ -52,12 +52,18 @@ class Settings(BaseSettings):
     # Staging lives outside RAW_DIR so cleanup.purge_all() never touches a
     # scan the admin is still reviewing.
     scrape_dir: Path = DATA_DIR / "scrape_staging"
-    scrape_user_agent: str = "NimbliDataBot/1.0"
-    scrape_scan_seconds: int = 180
+    # A normal desktop Chrome: many government firewalls refuse unknown agents.
+    scrape_user_agent: str = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
+    # robots.txt is ignored unless this is on (PLATFORM_SCRAPE_OBEY_ROBOTS=true):
+    # an admin asks for one public page, and pacing (below) keeps the load light.
+    scrape_obey_robots: bool = False
+    scrape_scan_seconds: int = 600
     scrape_host_interval_seconds: float = 1.0
-    scrape_max_files: int = 25
-    scrape_file_mb: int = 30
-    scrape_total_mb: int = 200
+    scrape_max_files: int = 100
+    scrape_file_mb: int = 100
+    scrape_total_mb: int = 500
     scrape_zip_max_files: int = 50
     scrape_zip_max_mb: int = 300
     scrape_max_rows: int = 1_000_000
@@ -70,7 +76,7 @@ class Settings(BaseSettings):
     scrape_browser_enabled: bool = True
     # False only where Chromium's sandbox can't start (e.g. running as root in Docker).
     scrape_browser_sandbox: bool = True
-    scrape_browser_seconds: int = 60
+    scrape_browser_seconds: int = 120
     scrape_browser_mb: int = 100
     scrape_feed_max: int = 30
     scrape_feed_mb: int = 10

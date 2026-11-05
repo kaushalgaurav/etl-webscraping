@@ -30,7 +30,8 @@ _NAME_EXEMPT = re.compile(
 _PERSONAL_SHARE = 0.3
 
 
-def _number(value) -> float | None:
+def parse_number(value) -> float | None:
+    """'1,23,456' -> 123456.0, '12.5%' -> 12.5; anything that isn't a number -> None."""
     if value is None or (isinstance(value, float) and pd.isna(value)):
         return None
     if isinstance(value, (int, float)) and not isinstance(value, bool):
@@ -42,6 +43,9 @@ def _number(value) -> float | None:
         return float(text)
     except ValueError:
         return None
+
+
+_number = parse_number
 
 
 def _cells(df: pd.DataFrame) -> list:

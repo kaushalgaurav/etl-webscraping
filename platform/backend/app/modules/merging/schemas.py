@@ -27,6 +27,11 @@ class MergeRequest(BaseModel):
         default=None,
         description="Explicit datasets to merge, instead of survey_id + connectors.",
     )
+    web_tables: list[str] | None = Field(
+        default=None,
+        description="Website tables to merge (their web_table_id from GET /warehouse/web/tables). "
+                    "Needs survey_id. They join HMIS on district and year, Census on district.",
+    )
     join_key: str | None = Field(
         default=None,
         description="Column or canonical field name (e.g. 'district'); resolved per dataset.",
@@ -37,6 +42,8 @@ class MergeRequest(BaseModel):
     def _one_way_or_the_other(self):
         if not self.survey_id and not self.dataset_ids:
             raise ValueError("Pass survey_id (with optional connectors) or dataset_ids.")
+        if self.web_tables and not self.survey_id:
+            raise ValueError("web_tables needs survey_id.")
         return self
 
     model_config = {

@@ -14,7 +14,7 @@ from app.crud import dataset as dataset_crud
 from app.models import Dataset
 from app.modules.census_warehouse import schema as census_schema
 from app.modules.cleaning.service import WAREHOUSE_OPERATIONS, clean_dataframe
-from app.modules.merging import survey
+from app.modules.merging import survey, web_join
 from app.modules.merging.service import MergeError, merge_dataframes
 
 
@@ -98,6 +98,39 @@ def run_clean(
     }
 
 
+def _join_with_web(db: Session, survey_id: int, request: dict, web_tables: list[str],
+                   report: list[str], report_progress: Callable[[str], None]):
+    """The survey merge when Website tables are ticked: district + year joins."""
+    requested = request.get("connectors")
+    chosen = list(requested) if requested is not None else survey.available_connectors(db, survey_id)
+    unknown = [c for c in chosen if c not in survey.WAREHOUSES]
+    if unknown:
+        raise MergeRequestError(f"Unknown connector(s): {', '.join(unknown)}. "
+                                f"Available: {', '.join(survey.WAREHOUSES)}")
+    masters = {}
+    for connector in chosen:
+        report_progress(f"loading {connector} master")
+        try:
+            masters[connector] = survey.load_master(db, connector, survey_id)
+        except survey.SurveyMergeError as exc:
+            raise MergeRequestError(str(exc)) from exc
+    report_progress(f"loading {len(web_tables)} Website table(s)")
+    try:
+        web_frames, places = web_join.load_web_frames(db, survey_id, web_tables)
+    except web_join.WebMergeError as exc:
+        raise MergeRequestError(str(exc)) from exc
+    if len(chosen) + len(web_frames) < 2:
+        raise MergeRequestError(
+            f"Merging needs at least two sources; survey {survey_id} has "
+            f"{', '.join(chosen) or 'no warehouse'} and {len(web_frames)} Website table name(s) ticked.")
+    report_progress(f"joining {len(chosen) + len(web_frames)} source(s)")
+    master_df, merge_report = web_join.join_with_web(
+        masters.get("census"), masters.get("hmis"), web_frames, places)
+    report.append(f"Survey {survey_id}: merged {', '.join(chosen + ['Website'])} on district and year.")
+    report += merge_report
+    return master_df, [], chosen + ["web"]
+
+
 def run_merge(
     db: Session, request: dict, progress_callback: Callable[[str], None] | None = None
 ) -> tuple[Dataset, dict]:
@@ -109,8 +142,12 @@ def run_merge(
     report: list[str] = []
     survey_id = request.get("survey_id")
     join_key = request.get("join_key")
+    web_tables = request.get("web_tables") or []
 
-    if survey_id:
+    if survey_id and web_tables:
+        master_df, parents, names = _join_with_web(db, survey_id, request, web_tables,
+                                                   report, report_progress)
+    elif survey_id:
         chosen = request.get("connectors") or survey.available_connectors(db, survey_id)
         unknown = [c for c in chosen if c not in survey.WAREHOUSES]
         if unknown:
@@ -142,12 +179,13 @@ def run_merge(
         names = [d.name for d in datasets]
         parents = list(dataset_ids)
 
-    report_progress(f"joining {len(frames)} source(s)")
-    try:
-        master_df, merge_report = merge_dataframes(frames, names, join_key=join_key)
-    except MergeError as exc:
-        raise MergeRequestError(str(exc)) from exc
-    report += merge_report
+    if not (survey_id and web_tables):
+        report_progress(f"joining {len(frames)} source(s)")
+        try:
+            master_df, merge_report = merge_dataframes(frames, names, join_key=join_key)
+        except MergeError as exc:
+            raise MergeRequestError(str(exc)) from exc
+        report += merge_report
 
     # Clean after merging, not before: the join introduces its own problems —
     # suffixed duplicate columns, nulls where a source had no row for a place.
@@ -158,6 +196,12 @@ def run_merge(
     table = survey.DASHBOARD_TABLE if survey_id else None
     if survey_id:
         master_df[census_schema.SURVEY_COL] = survey_id
+        # Checked before the survey's old rows are deleted: a refused merge
+        # must leave the dashboard as it was.
+        try:
+            web_join.check_column_budget(db.connection(), master_df)
+        except web_join.WebMergeError as exc:
+            raise MergeRequestError(str(exc)) from exc
         cleared = survey.replace_survey(db, survey_id)
         if cleared:
             report.append(f"Replaced {cleared:,} existing {table} row(s) for this survey.")

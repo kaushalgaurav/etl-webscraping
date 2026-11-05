@@ -48,7 +48,7 @@ def start_scan(body: ScanRequest, db: Session = Depends(get_db)):
     except _ERRORS as exc:
         raise _http(exc) from exc
     job = enqueue(db, "scrape_scan", payload={
-        "scan_id": scan.id, "url": scan.url, "include_files": body.include_files,
+        "scan_id": scan.key, "url": scan.url, "include_files": body.include_files,
         "render": body.render})
     scan.job_id = job.id
     db.commit()

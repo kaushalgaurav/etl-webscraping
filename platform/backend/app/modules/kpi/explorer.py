@@ -109,8 +109,13 @@ class Frame:
         self._frames = {}
 
     def source_of(self, column: str) -> dict:
+        # A prefix names its source exactly (Website columns, web_...), so it
+        # is checked before the suffixes, whose '' fallback matches anything.
         for source in self.sources:
-            if column.endswith(source.get("suffix") or ""):
+            if source.get("prefix") and column.startswith(source["prefix"]):
+                return source
+        for source in self.sources:
+            if not source.get("prefix") and column.endswith(source.get("suffix") or ""):
                 return source
         return self.sources[-1]
 

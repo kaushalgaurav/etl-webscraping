@@ -14,10 +14,12 @@ through make_session() (via fetcher.Fetcher).
 """
 import ipaddress
 import socket
+import ssl
 from collections.abc import Callable
 from urllib.parse import urlsplit
 
 import requests
+import truststore
 import urllib3
 from requests.adapters import HTTPAdapter
 from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
@@ -44,7 +46,6 @@ MESSAGES = {
     "browser_failed": "The page could not be opened in a browser, so only a plain read "
                       "was done.",
     "private_address": "This address points inside a private network and can't be read.",
-    "dedicated_connector": "This source has a dedicated connector; use the URL tab.",
     "too_large": "File is larger than the {n} MB limit.",
     "timeout": "Search stopped after {n} seconds.",
     "slow_response": "The site took longer than {n} seconds to answer.",
@@ -52,6 +53,7 @@ MESSAGES = {
     "unsupported": "This kind of address or file can't be read.",
     "http_error": "The site answered with status {status}.",
     "fetch_failed": "Couldn't connect to the site.",
+    "certificate_error": "The site's security certificate couldn't be verified.",
 }
 
 
@@ -61,10 +63,6 @@ def message(code: str, **fmt) -> str:
 
 PRIVATE_MESSAGE = MESSAGES["private_address"]
 UNSUPPORTED_MESSAGE = MESSAGES["unsupported"]
-
-# Sources with their own connector on the URL tab (spec §4.1).
-DEDICATED_HOSTS = ("censusindia.gov.in", "hmis.mohfw.gov.in", "data.gov.in")
-
 
 class ScrapeBlocked(Exception):
     """Something could not be read, with a code the review screen shows.
@@ -95,11 +93,6 @@ def check_url(url: str) -> None:
         raise ScrapeBlocked("unsupported", UNSUPPORTED_MESSAGE, url) from exc
     if parts.scheme not in ("http", "https") or not parts.hostname:
         raise ScrapeBlocked("unsupported", UNSUPPORTED_MESSAGE, url)
-
-
-def dedicated_connector(url: str) -> bool:
-    host = (urlsplit(url).hostname or "").lower()
-    return any(host == h or host.endswith("." + h) for h in DEDICATED_HOSTS)
 
 
 def resolve_checked(host: str, port: int, policy: AddressPolicy) -> str:
@@ -149,6 +142,12 @@ class _GuardedAdapter(HTTPAdapter):
         super().__init__()
 
     def init_poolmanager(self, *args, **kwargs):
+        # Verify certificates with the operating system's checker, as browsers
+        # and curl do. Python's own checker fails some valid government sites
+        # that also send an old chain through a retired root (www.nfhsiips.in:
+        # "self-signed certificate in certificate chain"). Checking stays full:
+        # hostname and chain are still verified.
+        kwargs["ssl_context"] = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         super().init_poolmanager(*args, **kwargs)
         self.poolmanager.pool_classes_by_scheme = _pool_classes(self._policy)
 
@@ -159,7 +158,12 @@ def make_session(policy: AddressPolicy = is_public_address) -> requests.Session:
     # A proxy from the environment would become the host we check and
     # connect to, bypassing the guard for the real target.
     session.trust_env = False
-    session.headers["User-Agent"] = settings.scrape_user_agent
+    # Read like a normal browser: some firewalls refuse requests that lack these.
+    session.headers.update({
+        "User-Agent": settings.scrape_user_agent,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-IN,en;q=0.9,hi;q=0.8",
+    })
     adapter = _GuardedAdapter(policy)
     session.mount("http://", adapter)
     session.mount("https://", adapter)

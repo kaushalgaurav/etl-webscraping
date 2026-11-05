@@ -25,3 +25,14 @@ def test_startup_cleanup_survives_missing_scrape_tables():
 
 def test_startup_cleanup_runs_when_tables_exist(db):
     assert service.startup_cleanup(db) is True
+
+
+def test_startup_sweeps_orphan_folders(db, httpserver, loopback_ok):
+    from app.modules.scraping import store
+    from tests.scraping import helpers
+    scan = helpers.run(db, helpers.standard_site(httpserver), loopback_ok)
+    orphan = store.scan_dir("old-id-123")
+    orphan.mkdir(parents=True)
+    (orphan / "x.txt").write_text("left over")
+    assert service.startup_cleanup(db) is True
+    assert not orphan.exists() and store.scan_dir(scan.key).exists()

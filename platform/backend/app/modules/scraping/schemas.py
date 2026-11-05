@@ -18,11 +18,29 @@ class ScanRequest(BaseModel):
 class ImportItem(BaseModel):
     finding_id: str
     name: str | None = Field(default=None, max_length=200,
-                             description="Dataset name; defaults to '<site> - <title>'.")
+                             description="Table name; defaults to '<site> - <title>'. Also names its "
+                                         "columns after Merge, so the same table across years keeps one name.")
+    place_column: str | None = Field(default=None, description=(
+        "Column holding the districts. Defaults to the review screen's guess "
+        "(signals.joinable.place_column)."))
+    state_name: str | None = Field(default=None, description="The state, when the table has no state column.")
+    state_column: str | None = Field(default=None, description=(
+        "Column holding each row's state. Defaults to the guessed signals.joinable.state_column."))
+    year: str | None = Field(default=None, description=(
+        "Financial year like 2019-2020 (see GET /warehouse/web/years). Give this or year_column."),
+        examples=["2019-2020"])
+    year_column: str | None = Field(default=None, description="Column holding each row's year.")
+    indicator_column: str | None = Field(default=None, description=(
+        "Long tables only (one row per district per indicator, e.g. NFHS district files): the "
+        "column naming each row's indicator. Each value is then filed under that name instead "
+        "of its column heading, so every indicator survives Clean and Master."))
+    columns: list[str] | None = Field(default=None, description=(
+        "Value columns to keep (e.g. one year's columns when years are in the headings). "
+        "Omit to keep all."))
 
 
 class ImportRequest(BaseModel):
-    survey_id: int = Field(description="Survey both saved datasets are filed under.", examples=[7])
+    survey_id: int = Field(description="Survey the saved tables are filed under.", examples=[7])
     items: list[ImportItem] = Field(min_length=1, description="Every ticked table, in one Save.")
 
 
