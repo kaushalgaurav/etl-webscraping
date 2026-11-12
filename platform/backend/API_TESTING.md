@@ -970,8 +970,8 @@ All scan and finding ids are UUIDs. A malformed id is answered 404.
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `url` | string | yes | Any public `http`/`https` page, or a direct link to a data file. Census, HMIS and data.gov.in addresses get 422: use the URL tab. |
-| `include_files` | boolean | no (default `true`) | Also download and read files the page links to (at most 25, 30 MB each, 200 MB in all). |
+| `url` | string | yes | Any public `http`/`https` page, or a direct link to a data file, including Census, HMIS and data.gov.in addresses. |
+| `include_files` | boolean | no (default `true`) | Also download and read files the page links to (at most 100, 100 MB each, 500 MB in all). |
 | `render` | string | no (default `auto`) | `auto`: open the page in a browser only when the plain read finds a JavaScript shell or no tables. `always` or `never`. Anything else gets 422. |
 
 ```bash
@@ -1092,8 +1092,9 @@ curl -s -X DELETE "$BASE/scrape/scans/SCAN_ID" -o /dev/null -w "%{http_code}\n"
 
 | Code | Meaning |
 |---|---|
-| `robots_disallowed` | The site's robots.txt asks automated tools not to read it. |
-| `bot_protection` / `captcha` / `login_required` | The site blocked us. We report this and never try to get around it. |
+| `robots_disallowed` | The site's robots.txt asks automated tools not to read it. Only when `PLATFORM_SCRAPE_OBEY_ROBOTS=true` (off by default). |
+| `bot_protection` / `captcha` / `login_required` | The site blocked us, and a second try in the headless browser didn't reach data either. No CAPTCHA solving or logins. |
+| `certificate_error` | The site's security certificate couldn't be verified (checked against the operating system's store plus certifi). |
 | `form_gated` | Data appears only after choosing options in a form. |
 | `needs_browser` | The page builds its content with JavaScript and wasn't opened in the browser (`render: never`, or the browser couldn't run). |
 | `browser_unavailable` | Browser mode isn't installed or is turned off on this server; only a plain read was done. |

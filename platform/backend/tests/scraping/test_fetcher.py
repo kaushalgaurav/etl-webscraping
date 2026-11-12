@@ -188,13 +188,20 @@ def test_robots_ignored_by_default(httpserver, loopback_ok):
     assert not any(req.path == "/robots.txt" for req, _ in httpserver.log)
 
 
-def test_https_checks_certificates_with_the_os_store():
+def test_https_checks_certificates_with_the_os_store(monkeypatch):
+    import certifi
     import truststore
 
+    loaded = []
+    real = truststore.SSLContext.load_verify_locations
+    monkeypatch.setattr(truststore.SSLContext, "load_verify_locations",
+                        lambda self, *a, **k: (loaded.append(a or k), real(self, *a, **k))[1])
     adapter = safety.make_session().get_adapter("https://example.org/")
     ctx = adapter.poolmanager.connection_pool_kw.get("ssl_context")
     assert isinstance(ctx, truststore.SSLContext)
     assert ctx.verify_mode.name == "CERT_REQUIRED" and ctx.check_hostname
+    # certifi's roots are trusted too, as before truststore: the OS store only adds.
+    assert loaded == [(certifi.where(),)]
 
 
 def test_certificate_problem_has_its_own_code(monkeypatch):

@@ -1,8 +1,9 @@
 """The Search job: read one page and the files it links to (spec §4).
 
 Stages, each reported through `progress`:
-  1. fetch the page (address guard, robots.txt, limits)
-  2. classify the answer (bot protection, CAPTCHA, login, HTTP error)
+  1. fetch the page (address guard, limits; robots.txt only when turned on)
+  2. classify the answer (bot protection, CAPTCHA, login, HTTP error); a
+     refused page gets a second try in the headless browser
   3. the URL is a file -> read it; else parse the page
   4. when the page is a JavaScript shell or has no tables (or the admin
      asked), open it in a headless browser: rendered tables, background
@@ -40,9 +41,15 @@ NOT_THERE = (404, 410)
 
 
 def _got_through(rendered: "discover_browser.Rendered") -> bool:
-    """The browser reached data: tables, file links, feeds or downloads."""
+    """The browser reached data: tables, feeds or downloads, and not another
+    challenge page. File links alone don't count: an error page wrapped in the
+    site's header and footer links to PDFs too."""
+    seen = Fetched(url=rendered.final_url, final_url=rendered.final_url, status=200,
+                   content_type="text/html", content=b"", filename="")
+    if blocked.detect(seen, rendered.html, expected_file=True) == "bot_protection":
+        return False
     page = discover_http.parse_page(rendered.html, rendered.final_url)
-    return bool(page.tables or page.file_links or rendered.feeds or rendered.downloads)
+    return bool(page.tables or rendered.feeds or rendered.downloads)
 
 
 def _preview(df: pd.DataFrame) -> list[list]:

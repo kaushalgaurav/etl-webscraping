@@ -18,6 +18,7 @@ import ssl
 from collections.abc import Callable
 from urllib.parse import urlsplit
 
+import certifi
 import requests
 import truststore
 import urllib3
@@ -147,7 +148,11 @@ class _GuardedAdapter(HTTPAdapter):
         # that also send an old chain through a retired root (www.nfhsiips.in:
         # "self-signed certificate in certificate chain"). Checking stays full:
         # hostname and chain are still verified.
-        kwargs["ssl_context"] = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        # certifi (what requests trusted before) is added on top, so a server
+        # whose own certificate store is thin or old loses nothing.
+        context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.load_verify_locations(certifi.where())
+        kwargs["ssl_context"] = context
         super().init_poolmanager(*args, **kwargs)
         self.poolmanager.pool_classes_by_scheme = _pool_classes(self._policy)
 

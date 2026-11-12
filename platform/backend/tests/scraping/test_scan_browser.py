@@ -99,3 +99,26 @@ def test_sends_a_normal_browser_identity(db, httpserver, loopback_ok, browser_ok
             {"data": part})
     scan = helpers.run(db, httpserver.url_for("/app"), loopback_ok, render="always")
     assert by_kind(db, scan, "rendered_table")
+
+
+NOT_REPORT_FORMS = {
+    "login": "<form action='/submit' method='post'><select name='role'><option>District user</option>"
+             "</select><input name='user'><input type='password' name='pw'><button>Sign in</button></form>",
+    "feedback_post": "<form action='/submit' method='post'><select name='topic'><option>Data</option>"
+                     "</select><button type='submit'>Send</button></form>",
+    "search_box": "<form action='/submit' method='get'><select name='in'><option>All</option></select>"
+                  "<input type='text' name='q'><button>Search</button></form>",
+    "captcha": "<form action='/submit' method='get'><select name='state'><option>All</option></select>"
+               "<img src='/Captcha.aspx'><input name='captcha_code'><button>Show</button></form>",
+}
+
+
+@pytest.mark.parametrize("kind", sorted(NOT_REPORT_FORMS))
+def test_forms_that_are_not_report_filters_are_never_submitted(db, httpserver, loopback_ok, browser_ok, kind):
+    helpers.serve(httpserver)
+    httpserver.expect_request("/form").respond_with_data(
+        helpers.page(NOT_REPORT_FORMS[kind]), content_type="text/html")
+    httpserver.expect_request("/submit").respond_with_data(helpers.page(helpers.district_table_html()),
+                                                           content_type="text/html")
+    helpers.run(db, httpserver.url_for("/form"), loopback_ok, render="always")
+    assert not any(req.path == "/submit" for req, _ in httpserver.log)

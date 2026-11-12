@@ -62,7 +62,7 @@ def test_permissive_policy_allows_local(httpserver, loopback_ok):
     assert resp.text == "hi"
 
 
-def test_session_sends_honest_user_agent(httpserver, loopback_ok):
+def test_session_sends_the_configured_user_agent(httpserver, loopback_ok):
     httpserver.expect_request("/", headers={"User-Agent": settings.scrape_user_agent}).respond_with_data("ok")
     assert safety.make_session(loopback_ok).get(httpserver.url_for("/"), timeout=5).text == "ok"
 

@@ -1,16 +1,19 @@
 """Open a JavaScript page in a headless Chromium (spec §4.3).
 
-Used only when the plain read (discover_http) found an empty JavaScript
-shell or no tables, or the admin asked for it. Returns the rendered HTML,
+Used when the plain read (discover_http) found an empty JavaScript shell or
+no tables, when the plain read was refused (firewall, 403, a CAPTCHA with no
+data), or when the admin asked for it. Returns the rendered HTML,
 which the scan reads with the same parse_page as a plain page, plus:
   - feeds: JSON the page fetched by itself while loading (its data API),
   - downloads: files produced by up to 3 Export / Download buttons.
+A report-filter form (GET, drop-downs only, nothing to type) on a page with
+no data yet is submitted once with its default choices.
 
 Safety (spec §9): every connection Chromium makes goes through a
 FilteringProxy on 127.0.0.1, which applies the same address policy as the
 plain path, so the browser can't reach private addresses. Loopback is not
 exempt (`<-loopback>`). A fresh browser and context per call, no profile,
-service workers blocked, the scraper's own User-Agent, Chromium's sandbox
+service workers blocked, the scraper's User-Agent (a desktop Chrome), Chromium's sandbox
 on unless the server can't run it. One browser at a time (BROWSER_LOCK).
 
 Time (spec §4.8): every Playwright wait takes its timeout from the render
@@ -273,11 +276,23 @@ def _render_page(browser, url: str, clock: _Clock, proxy: FilteringProxy,
 
 
 _SUBMIT = "input[type=submit], button[type=submit], button:not([type])"
-# The first form with a drop-down and a submit button, on a page with no data
-# table yet; -1 when there is none.
+# The first *report filter* form on a page with no data table yet; -1 when there
+# is none. A report filter only reads: it is sent with GET, chooses with
+# drop-downs, and needs nothing typed. So never a login (password), an upload,
+# a message box, a CAPTCHA, a POST form (feedback, grievance, subscribe), or a
+# search box left empty.
 _FIND_FORM = """(submit) => {
   if (document.querySelector('table tr td')) return -1;
-  return [...document.forms].findIndex(f => f.querySelector('select') && f.querySelector(submit));
+  const typed = 'input:not([type]), input[type=text], input[type=search], input[type=email], ' +
+                'input[type=tel], input[type=number]';
+  const isReportFilter = f => {
+    if ((f.getAttribute('method') || 'get').toLowerCase() !== 'get') return false;
+    if (!f.querySelector('select') || !f.querySelector(submit)) return false;
+    if (f.querySelector('input[type=password], input[type=file], textarea')) return false;
+    if (/captcha/i.test(f.innerHTML)) return false;
+    return [...f.querySelectorAll(typed)].every(i => i.value.trim() !== '');
+  };
+  return [...document.forms].findIndex(isReportFilter);
 }"""
 
 

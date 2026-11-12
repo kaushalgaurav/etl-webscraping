@@ -122,3 +122,74 @@ def test_render_never_still_reports_the_block(db, httpserver, loopback_ok, monke
 def test_sources_with_a_dedicated_connector_can_be_searched(db):
     scan = service.create_scan(db, "https://hmis.mohfw.gov.in/#!/", True)
     assert scan.status == "running"
+
+
+def test_server_error_page_is_retried_in_the_browser(db, httpserver, loopback_ok, monkeypatch):
+    monkeypatch.setattr(settings, "scrape_browser_enabled", True)
+    httpserver.expect_request("/p").respond_with_data("Server error", status=500, content_type="text/html")
+    monkeypatch.setattr(discover_browser, "render",
+                        rendered_with(helpers.page(helpers.district_table_html())))
+    scan = helpers.run(db, httpserver.url_for("/p"), loopback_ok)
+    assert "rendered_table" in kinds(db, scan) and codes(scan) == []
+
+
+def test_refused_page_with_only_template_links_is_still_reported(db, httpserver, loopback_ok, monkeypatch):
+    """A 403 page wrapped in the site's header and footer (links to PDFs) is not data."""
+    monkeypatch.setattr(settings, "scrape_browser_enabled", True)
+    httpserver.expect_request("/p").respond_with_data("Forbidden", status=403, content_type="text/html")
+    monkeypatch.setattr(discover_browser, "render", rendered_with(helpers.page(
+        "<h1>403 Forbidden</h1><a href='/rti.pdf'>RTI</a><a href='/citizen-charter.pdf'>Charter</a>")))
+    scan = helpers.run(db, httpserver.url_for("/p"), loopback_ok)
+    assert codes(scan) == ["http_error"] and kinds(db, scan) == []
+    assert not any(req.path.endswith(".pdf") for req, _ in httpserver.log)
+
+
+def test_rendered_challenge_page_is_not_through(db, httpserver, loopback_ok, monkeypatch):
+    monkeypatch.setattr(settings, "scrape_browser_enabled", True)
+    httpserver.expect_request("/p").respond_with_data(CHALLENGE, status=403, content_type="text/html")
+    monkeypatch.setattr(discover_browser, "render", rendered_with(
+        "<html><title>Just a moment...</title><body><a href='/x.pdf'>x</a>"
+        "<div class='cf-turnstile'></div></body></html>"))
+    scan = helpers.run(db, httpserver.url_for("/p"), loopback_ok)
+    assert codes(scan) == ["bot_protection"]
+
+
+def test_retry_after_is_capped(httpserver, loopback_ok, monkeypatch):
+    from app.modules.scraping import fetcher as fetcher_module
+
+    waits = []
+    monkeypatch.setattr(fetcher_module.time, "sleep", waits.append)
+    httpserver.expect_oneshot_request("/p").respond_with_data("busy", status=503, headers={"Retry-After": "3600"})
+    httpserver.expect_request("/p").respond_with_data("ok")
+    assert Fetcher(policy=loopback_ok).get(httpserver.url_for("/p"), max_bytes=1000).content == b"ok"
+    assert waits == [30.0]
+
+
+def test_no_time_to_retry_keeps_the_first_answer(httpserver, loopback_ok):
+    from app.modules.scraping.fetcher import Deadline
+
+    httpserver.expect_request("/p").respond_with_data(CHALLENGE, status=503, headers={"Retry-After": "20"})
+    got = Fetcher(policy=loopback_ok, deadline=Deadline(5)).get(httpserver.url_for("/p"), max_bytes=10_000)
+    assert got.status == 503 and b"Just a moment" in got.content
+
+
+def test_a_host_that_keeps_refusing_is_not_waited_on_again(httpserver, loopback_ok, monkeypatch):
+    from app.modules.scraping import fetcher as fetcher_module
+
+    waits = []
+    monkeypatch.setattr(fetcher_module.time, "sleep", waits.append)
+    httpserver.expect_request("/p").respond_with_data("busy", status=429, headers={"Retry-After": "1"})
+    f = Fetcher(policy=loopback_ok)
+    for _ in range(4):
+        f.get(httpserver.url_for("/p"), max_bytes=1000)
+    assert len(waits) == 2  # once for each of the first two refusals, then no more
+
+
+def test_referer_follows_the_browser_default_policy():
+    from app.modules.scraping.fetcher import referer_for
+
+    page = "https://data.gov.in/resource/x?api-key=SECRET"
+    assert referer_for(page, "https://data.gov.in/files/x.csv") == page
+    assert referer_for(page, "https://cdn.example.org/x.csv") == "https://data.gov.in/"
+    assert referer_for(page, "http://data.gov.in/files/x.csv") is None
+    assert referer_for(None, "https://data.gov.in/files/x.csv") is None

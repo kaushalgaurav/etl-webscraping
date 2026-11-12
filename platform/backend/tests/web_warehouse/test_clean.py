@@ -131,3 +131,17 @@ def test_clean_long_table_one_row_per_district(db):
     values = {(r.district_name, r.indicator): r.value for r in clean_rows(db, t)}
     assert len(clean_rows(db, t)) == 3 and values == {("Patna", "women_literate"): 70.1, ("Patna", "children_stunted"): 30.5,
                       ("Gaya", "women_literate"): 55.0}
+
+
+def test_long_table_repeated_indicator_is_reported(db):
+    s = new_survey()
+    t = saved_table(db, s, LONG, [["Patna", "Women literate (%)", "70.1"],
+                                  ["Patna", "Women literate (%)", "50.0"],
+                                  ["Gaya", "Women literate (%)", "55.0"]],
+                    indicator_column="Indicator")
+    service.build_clean(db, survey_id=s)
+    db.refresh(t)
+    # Two values for one district + indicator (e.g. Total and Rural rows): only one
+    # can be kept, so the place is flagged rather than silently overwritten.
+    assert "Patna" in t.match_summary["duplicate_places"]
+    assert "Gaya" not in t.match_summary["duplicate_places"]

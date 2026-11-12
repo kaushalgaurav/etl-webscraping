@@ -89,13 +89,15 @@ def _indicators(headers: list[str]) -> dict[str, str]:
     return out
 
 
-def _rebuild(db: Session, table: WebTable) -> tuple[pd.DataFrame, dict[str, str], dict]:
-    """The table in its original shape: (frame, {vK: header}, {(row, header): raw id}).
+def _rebuild(db: Session, table: WebTable) -> tuple[pd.DataFrame, dict[str, str], dict, list[str]]:
+    """The table in its original shape: (frame, {vK: header}, {(row, header): raw id},
+    places with a repeated indicator).
 
     A long table (one source row per place per indicator) is folded to one row
     per place and year, its indicators side by side, numbered by the place's
     first source row. Otherwise each place would look repeated once per
-    indicator.
+    indicator. Two values for one place, year and indicator (Total and Rural
+    rows, say) can't both be kept: the last wins and the place is reported.
     """
     raws = (db.query(WebRaw).filter(WebRaw.web_table_id == table.id)
             .order_by(WebRaw.row_number, WebRaw.id).all())
@@ -103,6 +105,7 @@ def _rebuild(db: Session, table: WebTable) -> tuple[pd.DataFrame, dict[str, str]
     slot = {h: f"v{i}" for i, h in enumerate(headers)}
     rows: dict = {}
     raw_ids = {}
+    repeated: list[str] = []
     for r in raws:
         key = (r.place_text, r.state_text, r.year_text) if table.indicator_column else r.row_number
         row = rows.setdefault(key, {ROW: r.row_number})
@@ -112,12 +115,14 @@ def _rebuild(db: Session, table: WebTable) -> tuple[pd.DataFrame, dict[str, str]
             row[STATE] = r.state_text
         if table.year_column:
             row[YEAR] = r.year_text
+        if table.indicator_column and slot[r.column_name] in row and r.place_text not in repeated:
+            repeated.append(r.place_text)
         row[slot[r.column_name]] = r.value_text
         raw_ids[(row[ROW], r.column_name)] = r.id
     columns = [ROW] + [c for c, on in ((DISTRICT, table.place_column), (STATE, table.state_column),
                                        (YEAR, table.year_column)) if on] + list(slot.values())
     frame = pd.DataFrame(list(rows.values()), columns=columns)
-    return frame, {v: h for h, v in slot.items()}, raw_ids
+    return frame, {v: h for h, v in slot.items()}, raw_ids, repeated
 
 
 def _clean_frame(frame: pd.DataFrame, operations: list[str]) -> pd.DataFrame:
@@ -140,7 +145,7 @@ def _check_operations(operations: list[str]) -> None:
 
 
 def _clean_table(db: Session, table: WebTable, operations: list[str]) -> int:
-    frame, slots, raw_ids = _rebuild(db, table)
+    frame, slots, raw_ids, repeated = _rebuild(db, table)
     indicators = _indicators(list(slots.values()))
     frame = _clean_frame(frame, operations)
 
@@ -185,7 +190,8 @@ def _clean_table(db: Session, table: WebTable, operations: list[str]) -> int:
                         "raw_id": raw_id, **geo, "year": year,
                         "indicator": indicators[header], "value": parse_number(record.get(slot))})
 
-    duplicates = list(dict.fromkeys(name for (_u, _y, name), n in seen_rows.items() if n > 1))
+    duplicates = list(dict.fromkeys(
+        [name for (_u, _y, name), n in seen_rows.items() if n > 1] + [p for p in repeated if p]))
     db.query(WebClean).filter(WebClean.web_table_id == table.id).delete(synchronize_session=False)
     bulk_insert(db.connection(), WebClean, out)
     table.status = "cleaned"

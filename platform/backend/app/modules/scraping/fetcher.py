@@ -96,6 +96,7 @@ def _filename(url: str, disposition: str | None) -> str:
 
 
 RETRY_STATUSES = (429, 503)
+MAX_RETRIES_PER_HOST = 2
 RETRY_WAIT_DEFAULT = 5.0
 RETRY_WAIT_MAX = 30.0
 
@@ -107,6 +108,20 @@ def _retry_after(header: str | None) -> float:
     except ValueError:
         wait = RETRY_WAIT_DEFAULT  # an HTTP date: not worth parsing for one retry
     return min(max(wait, 0.0), RETRY_WAIT_MAX)
+
+
+def referer_for(page: str | None, target: str) -> str | None:
+    """What a browser sends by default (strict-origin-when-cross-origin): the full
+    page address to the same site, only the site's origin to another site, and
+    nothing from https to http. Keeps a pasted ?api-key= on its own site."""
+    if not page:
+        return None
+    src, dst = urlsplit(page), urlsplit(target)
+    if src.scheme == "https" and dst.scheme != "https":
+        return None
+    if (src.scheme, src.netloc) == (dst.scheme, dst.netloc):
+        return page
+    return f"{src.scheme}://{src.netloc}/"
 
 
 def _seconds(n: float) -> int:
@@ -121,6 +136,7 @@ class Fetcher:
         self._session = make_session(policy)
         self._throttle = throttle
         self._robots: dict[str, RobotFileParser | None] = {}
+        self._refusals: dict[str, int] = {}  # host -> 429/503 retries spent
 
     # robots.txt -------------------------------------------------------------
     def allowed_by_robots(self, url: str) -> bool:
@@ -152,15 +168,21 @@ class Fetcher:
             check_url(current)
             if check_robots and settings.scrape_obey_robots and not self.allowed_by_robots(current):
                 raise ScrapeBlocked("robots_disallowed", message("robots_disallowed"), current)
-            resp = self._send(current, referer)
-            if resp.status_code in RETRY_STATUSES and not retried:
-                # "Too many requests" / "busy": wait as asked (capped), try once more.
+            hop_referer = referer_for(referer, current)
+            resp = self._send(current, hop_referer)
+            host = urlsplit(current).netloc
+            if (resp.status_code in RETRY_STATUSES and not retried
+                    and self._refusals.get(host, 0) < MAX_RETRIES_PER_HOST):
+                # "Too many requests" / "busy": wait as asked (capped), try once
+                # more. A host that keeps refusing isn't waited on again, so a
+                # page of 100 refused files can't eat the whole Search.
                 retried = True
+                self._refusals[host] = self._refusals.get(host, 0) + 1
                 wait = _retry_after(resp.headers.get("Retry-After"))
-                resp.close()
                 if wait < self.deadline.remaining():
+                    resp.close()
                     time.sleep(wait)
-                    resp = self._send(current, referer)
+                    resp = self._send(current, hop_referer)
             if resp.is_redirect and resp.headers.get("Location"):
                 resp.close()
                 current = urljoin(current, resp.headers["Location"])

@@ -69,7 +69,7 @@ Why: data the platform needs is spread over many government and institutional pa
 **Anti-goals (what would make this a failure even if it "works")**
 
 - Junk in the warehouse: layout tables, menus, contact lists and duplicates imported because nothing stopped them. The review step exists to prevent this.
-- Getting past access controls: no CAPTCHA solving, no tools that disguise the bot as a person, no proxy rotation to dodge blocks. A blocked page is reported, not defeated. (Changed 2026-11-12: robots.txt is no longer a blocker; it is ignored unless `PLATFORM_SCRAPE_OBEY_ROBOTS=true`.)
+- Getting past access controls: no CAPTCHA solving, no logins, no proxy rotation to dodge blocks. (Changed 2026-11-12, user's decision to read almost any URL an admin gives: robots.txt is ignored unless `PLATFORM_SCRAPE_OBEY_ROBOTS=true`; requests look like a desktop Chrome; a refused page gets one second try in the headless browser; a report-filter form is submitted once with its defaults. What the browser can't get past either is reported.)
 - The server fetching internal addresses because an admin typed one. This includes the cloud metadata service and the database host (see section 9).
 - An import that silently loses where data came from. Every imported row must trace back to the page, the finding and the time.
 
@@ -106,7 +106,7 @@ Search starts a background job (`job_type = "scrape_scan"`) that runs these stag
 - **Which requests the robots.txt check covers (my call):**
   - Checked, against the robots.txt of the host being requested: the page itself, every file download (on any host), and every feed page the scraper requests on its own when following a feed's further pages (4.3). A disallowed file or feed page becomes a `robots_disallowed` entry in "Couldn't read".
   - Not checked: requests the page makes by itself while it renders in the browser. Those are part of displaying the page the admin asked for, the same as a person's browser. So a feed the page loads on its own is still captured even when robots.txt disallows `/api/`. Only fetching *further* pages of it is subject to robots.txt.
-- **Known hosts** (`censusindia.gov.in`, `hmis.mohfw.gov.in`, `data.gov.in`/`api.data.gov.in`): don't scrape. Reply "This source has a dedicated connector; use the URL tab", so the admin gets the better path. **(my call)**
+- **Known hosts** (`censusindia.gov.in`, `hmis.mohfw.gov.in`, `data.gov.in`/`api.data.gov.in`): don't scrape. Reply "This source has a dedicated connector; use the URL tab", so the admin gets the better path. **(my call)** *(Removed 2026-11-12: these addresses can be searched too.)*
 
 ### 4.2 Plain download (always, first)
 
@@ -186,13 +186,13 @@ For each table finding compute:
 
 | Limit | Default |
 |---|---|
-| Whole scan | 180 s |
+| Whole scan | 180 s (600 s since 2026-11-12) |
 | Single page load / request | 30 s (the existing `request_timeout_seconds`) |
 | Requests to one host | 1 per second |
 | Feed pages followed per feed | 50 |
-| Files downloaded | 25 |
-| One file | 30 MB |
-| All files in a scan | 200 MB |
+| Files downloaded | 25 (100 since 2026-11-12) |
+| One file | 30 MB (100 MB since 2026-11-12) |
+| All files in a scan | 200 MB (500 MB since 2026-11-12) |
 | ZIP: inner files / unpacked size | 50 files / 300 MB |
 | Table rows kept per finding | 1,000,000 (larger is truncated and flagged) |
 | Preview | first 20 rows × 30 columns |
@@ -412,10 +412,10 @@ This code is not in this repository. The design only fixes the contract it needs
   - Enforce the size and ZIP limits in 4.8 while streaming, not after.
 - **Browser:** headless Chromium in its normal sandbox. No extensions, no stored profile, a fresh context per scan, downloads only into the scan folder.
 - **Honest identity:**
-  - A fixed User-Agent naming the platform generically (e.g. `NimbliDataBot/1.0`), not pretending to be a person's browser. **(my call)**
+  - A fixed User-Agent naming the platform generically (e.g. `NimbliDataBot/1.0`), not pretending to be a person's browser. **(my call)** *(Changed 2026-11-12: a desktop Chrome User-Agent, because government firewalls refuse unknown agents.)*
   - No contact email in it unless the owner chooses one.
   - The plain-HTTP and browser stages use the same identity.
-- **Polite rate:** 1 request per second per host (4.8). Obey robots.txt (4.1).
+- **Polite rate:** 1 request per second per host (4.8). Obey robots.txt (4.1). *(Since 2026-11-12 robots.txt only when turned on; a 429/503 is retried once, at most twice per host per Search.)*
 - **Personal data:** flagged in review (4.7) and never pre-ticked. India's DPDP Act applies to personal data even when it is publicly visible.
 
 ## 10. What's required to build it
