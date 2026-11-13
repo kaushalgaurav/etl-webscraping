@@ -19,6 +19,10 @@ import pandas as pd
 # The merge suffixes each warehouse's columns; the suffix is what says which
 # frame a column belongs in.
 CENSUS_SUFFIX = "_census"
+# Website columns are named web_<table>_<indicator> by the merge, and vary by
+# year: one value per district per year, repeated on that year's HMIS rows.
+WEB_PREFIX = "web_"
+YEAR_COL = "year"
 
 # Preference order for the key identifying one place. unique_id is the
 # crosswalk id both warehouses share; the others are fallbacks for a frame
@@ -28,6 +32,10 @@ PLACE_KEYS = ("unique_id", "district_id_census", "district_name_census")
 
 def is_census(column: str) -> bool:
     return column.endswith(CENSUS_SUFFIX)
+
+
+def is_web(column: str) -> bool:
+    return column.startswith(WEB_PREFIX)
 
 
 def one_row_per_place(df: pd.DataFrame) -> pd.DataFrame:
@@ -42,8 +50,17 @@ def one_row_per_place(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def one_row_per_place_year(df: pd.DataFrame) -> pd.DataFrame:
+    """The frame reduced to a single row per district per year (Website columns)."""
+    if "unique_id" in df.columns and YEAR_COL in df.columns:
+        return df.drop_duplicates(subset=["unique_id", YEAR_COL])
+    return one_row_per_place(df)
+
+
 def frame_for(df: pd.DataFrame, column: str) -> pd.DataFrame:
     """The frame `column` should be aggregated over."""
+    if is_web(column):
+        return one_row_per_place_year(df)
     return one_row_per_place(df) if is_census(column) else df
 
 

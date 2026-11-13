@@ -32,7 +32,13 @@ CONNECTOR_CATEGORY = {
     "hmis_reports": "api",
     "html_table": "web",
     "dynamic_site": "web",
+    # Website tab: tables read off a page (or its embedded data) vs tables
+    # from files the page linked to.
+    "web_table": "web",
+    # Background data feeds a page loaded in the browser: an API pull.
+    "web_feed": "api",
     "csv_excel": "file",
+    "web_file": "file",
     "merge": "merged",
     # A re-clean rewrites the merged table in place; its output is the same
     # kind of artefact as the merge that produced it.

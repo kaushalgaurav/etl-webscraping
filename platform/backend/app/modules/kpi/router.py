@@ -343,6 +343,73 @@ class KpiAggregateRequest(BaseModel):
     }
 
 
+WEB_SOURCE = {"suffix": "", "prefix": "web_", "place_key": ["unique_id"], "time": ["year"]}
+
+
+def with_web_source(df, sources: list[dict]) -> list[dict]:
+    """Add the Website source when the merged frame has Website columns.
+
+    The portal declares Census and HMIS; Website tables come and go per survey,
+    so the backend declares them: one value per district per year.
+    """
+    if not _has_web(df) or "year" not in df.columns or any(s.get("prefix") == "web_" for s in sources):
+        return sources
+    return [*sources, dict(WEB_SOURCE)]
+
+
+def _has_web(df) -> bool:
+    return any(str(c).startswith(WEB_SOURCE["prefix"]) for c in df.columns)
+
+
+def with_web_dimensions(df, dimensions: dict[str, dict]) -> dict[str, dict]:
+    """Let a state / district dimension also read the Website place columns.
+
+    A row that exists only because of a Website table has its place only in
+    web_state_* / web_district_*. Which one is appended follows the
+    dimension's first column: a name dimension gets the name, an id one the id.
+    """
+    if not _has_web(df):
+        return dimensions
+    out = {}
+    for name, dim in dimensions.items():
+        columns = list(dim.get("columns") or [])
+        first = str(columns[0]).lower() if columns else ""
+        tokens = set(first.split("_"))
+        kind = "state" if "state" in tokens else "district" if "district" in tokens else None
+        if kind:
+            extra = f"web_{kind}_{'id' if 'id' in tokens else 'name'}"
+            if extra in df.columns and extra not in columns:
+                columns.append(extra)
+        out[name] = {**dim, "columns": columns}
+    return out
+
+
+def with_web_time_slices(df, slices: list[dict], time_columns: list[str]) -> list[dict]:
+    """Add the years only Website rows have, as full-year slices.
+
+    The portal picks a slice and sends it back as `time`; with_web_year then
+    adds `year`, so HMIS columns come out empty for that year and Website
+    columns are counted.
+    """
+    if not _has_web(df) or "year" not in df.columns or "report_year_hmis" not in time_columns:
+        return slices
+    known = {s.get("report_year_hmis") for s in slices}
+    web_rows = df[[c for c in df.columns if str(c).startswith(WEB_SOURCE["prefix"])]].notna().any(axis=1)
+    extra = []
+    for year in sorted(df.loc[web_rows, "year"].dropna().astype(str).unique()):
+        if year not in known:
+            extra.append({c: year if c == "report_year_hmis" else
+                          "MonthUpToMarch" if c == "period_hmis" else None for c in time_columns})
+    return slices + extra
+
+
+def with_web_year(time: dict | None) -> dict | None:
+    """A time slice also names the shared `year`, taken from HMIS's report year."""
+    if time is None or "year" in time or "report_year_hmis" not in time:
+        return time
+    return {**time, "year": time["report_year_hmis"]}
+
+
 @router.post("/aggregate")
 def aggregate_kpis(body: KpiAggregateRequest, db: Session = Depends(get_db)) -> dict:
     """Compute declarative KPIs for a filtered selection, overall and per group.
@@ -360,22 +427,26 @@ def aggregate_kpis(body: KpiAggregateRequest, db: Session = Depends(get_db)) -> 
     except survey.SurveyMergeError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     kpis = [k.model_dump() for k in body.kpis]
-    sources = [s.model_dump() for s in body.sources]
+    sources = with_web_source(df, [s.model_dump() for s in body.sources])
+    time = with_web_year(body.time)
+    previous_time = with_web_year(body.previous_time)
+    trend_times = [with_web_year(t) for t in body.trend_times]
     common = {
-        "dimensions": {n: d.model_dump() for n, d in body.dimensions.items()},
+        "dimensions": with_web_dimensions(df, {n: d.model_dump() for n, d in body.dimensions.items()}),
         "filters": body.filters, "pair_on": body.pair_on,
     }
     try:
-        result = explorer.aggregate(df, kpis, sources, time=body.time, group_by=body.group_by,
+        result = explorer.aggregate(df, kpis, sources, time=time, group_by=body.group_by,
                                     labels=body.labels, **common)
         previous = None
-        if body.previous_time:
-            previous = explorer.aggregate(df, kpis, sources, time=body.previous_time,
+        if previous_time:
+            previous = explorer.aggregate(df, kpis, sources, time=previous_time,
                                           group_by=body.group_by, **common)
         trend_specs = [k for k in kpis if not body.trend_kpis or k["id"] in body.trend_kpis]
         trend = [
-            {"time": t, "overall": explorer.aggregate(df, trend_specs, sources, time=t, **common)["overall"]}
-            for t in body.trend_times
+            {"time": shown, "overall": explorer.aggregate(df, trend_specs, sources, time=t,
+                                                          **common)["overall"]}
+            for shown, t in zip(body.trend_times, trend_times)
         ] if trend_specs else []
     except explorer.ExplorerError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -409,9 +480,12 @@ def kpi_dimensions(body: KpiDimensionsRequest, db: Session = Depends(get_db)) ->
     except survey.SurveyMergeError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     try:
-        return {"survey_id": body.survey_id, **explorer.dimensions(
-            df, {n: d.model_dump() for n, d in body.dimensions.items()}, body.labels, body.time_columns,
-        )}
+        result = explorer.dimensions(
+            df, with_web_dimensions(df, {n: d.model_dump() for n, d in body.dimensions.items()}),
+            body.labels, body.time_columns,
+        )
+        result["time_slices"] = with_web_time_slices(df, result["time_slices"], body.time_columns)
+        return {"survey_id": body.survey_id, **result}
     except explorer.ExplorerError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 

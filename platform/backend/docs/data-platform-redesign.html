@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Platform Redesign</title>
+<style>
+  :root{
+    --ink:#1d2330; --muted:#5b6475; --line:#d5d9e0; --soft:#f4f6f9;
+    --accent:#1f5fa8; --good:#2e7d4f; --bad:#b23b3b; --warn:#9a6a00;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#fff;color:var(--ink)}
+  body{font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+       max-width:880px;margin:0 auto;padding:40px 24px 60px;
+       -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  h1{font-size:26px;line-height:1.25;margin:0 0 6px}
+  h2{font-size:19px;margin:34px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--ink)}
+  h3{font-size:15.5px;margin:22px 0 6px}
+  p{margin:6px 0 10px}
+  ul,ol{margin:6px 0 10px;padding-left:22px}
+  li{margin:3px 0}
+  code{font:12.5px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--soft);padding:1px 4px;border-radius:3px}
+  pre{font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--soft);border:1px solid var(--line);
+      border-radius:6px;padding:10px 12px;overflow-x:auto;white-space:pre}
+  table{border-collapse:collapse;width:100%;margin:8px 0 14px;font-size:13px}
+  th,td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+  th{background:var(--soft);font-weight:600}
+  .meta{color:var(--muted);font-size:13px;margin-bottom:18px}
+  .summary{border:1px solid var(--line);border-left:4px solid var(--accent);background:var(--soft);padding:12px 16px;border-radius:6px}
+  .summary ul{margin:4px 0}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 4px}
+  .box{border:1px solid #9aa3b2;border-radius:6px;padding:5px 9px;font-size:12.5px;background:#fff}
+  .box.hl{border:2px solid var(--good)}
+  .box.bad{border-color:var(--bad);color:var(--bad)}
+  .arr{color:var(--muted)}
+  .cap{font-size:12.5px;color:var(--muted);margin:2px 0 12px}
+  .tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:9px;border:1px solid}
+  .tag.decided{color:var(--good);border-color:var(--good)}
+  .tag.call{color:var(--accent);border-color:var(--accent)}
+  .tag.open{color:var(--warn);border-color:var(--warn)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .note{font-size:12.5px;color:var(--muted)}
+  .problem td:first-child{font-weight:600;white-space:nowrap}
+  @media (max-width:640px){ .two{grid-template-columns:1fr} body{padding:24px 16px} }
+  @page{size:A4;margin:16mm 14mm}
+  @media print{
+    body{max-width:none;padding:0;font-size:12.5px}
+    h2{break-after:avoid} h3{break-after:avoid}
+    table,pre,.flow,.summary,.two{break-inside:avoid}
+    a{color:inherit;text-decoration:none}
+  }
+</style>
+</head>
+<body>
+
+<h1>Data Platform Redesign and the "Website" Tab</h1>
+<div class="meta">ETL service (<code>platform/backend</code>) · Draft for tech lead review · 4 November 2026</div>
+
+<div class="summary">
+<b>In short</b>
+<ul>
+  <li><b>Today</b>, only Census and HMIS data reach the dashboard. Uploads and other links each create a new database table that is never used again and never deleted.</li>
+  <li><b>The cause</b> is the storage design: four different ways of storing data, each number copied up to four times, and new tables created on the fly.</li>
+  <li><b>The proposal</b>: store every number from every source as one row in one shared table (<code>observations</code>), with small reference lists for places, indicators and surveys. No table is ever created per import.</li>
+  <li><b>The new Website tab</b> lets an admin enter any web address, see the tables and files found there, pick what to keep, match it to places and indicators, and save it into the same shared table. Everything not picked is thrown away.</li>
+  <li><b>Rollout is phased</b>: new tables and the Website tab first; Census/HMIS move across only after every KPI number is verified to match.</li>
+</ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>1. How it works today</h2>
+
+<p>The admin works in the nimbli.ai portal. The portal's own backend (built by another team) sends requests to this ETL service, which stores data in PostgreSQL. Long tasks run as background <b>jobs</b>: the service replies at once with a job number (HTTP 202), at most two jobs run at a time, and the portal checks the job until it finishes.</p>
+
+<h3>1.1 URL tab: Census and HMIS</h3>
+<div class="flow">
+  <div class="box">Fetch</div><span class="arr">→</span>
+  <div class="box">raw table</div><span class="arr">→</span>
+  <div class="box">clean table</div><span class="arr">→</span>
+  <div class="box">master table</div><span class="arr">→</span>
+  <div class="box">Merge → <code>dashboard_master</code></div><span class="arr">→</span>
+  <div class="box hl">KPIs</div>
+</div>
+<p class="cap">Census uses <code>census_raw / census_clean / census_master</code>; HMIS uses the matching <code>hmis_*</code> tables. These are fixed, shared tables.</p>
+<ul>
+  <li>Every fetch is tagged with a <b>survey number</b>. Fetching again under the same survey <b>replaces</b> that survey's rows.</li>
+  <li><b>Clean</b> and <b>master</b> are separate steps, run on request. <b>Merge</b> joins one survey's Census master and HMIS master by district into <code>dashboard_master</code>.</li>
+  <li>All KPI cards, the 227-indicator report and the AI-suggested KPIs read <code>dashboard_master</code>. Numbers are always computed by code, never by AI.</li>
+</ul>
+
+<h3>1.2 URL tab: any other link, and the Uploads tab</h3>
+<div class="flow">
+  <div class="box">CSV/Excel link, API, web page</div><span class="arr">→</span>
+  <div class="box bad">2 new tables <code>ds_&lt;id&gt;</code> (as received + cleaned)</div><span class="arr">→</span>
+  <div class="box bad">stops</div>
+</div>
+<div class="flow">
+  <div class="box">Uploaded file (CSV, Excel, JSON; max 50 MB)</div><span class="arr">→</span>
+  <div class="box bad">1 new table <code>ds_&lt;id&gt;</code> (as received)</div><span class="arr">→</span>
+  <div class="box bad">stops</div>
+</div>
+<p class="cap">A <code>ds_&lt;id&gt;</code> table is a copy of the file's rows and columns. Uploads have no survey number, no cleaned copy, and only the first Excel sheet is read. None of this reaches the dashboard.</p>
+
+<h3>1.3 Gemini (AI) data</h3>
+<p>An admin can ask Gemini for a table in plain words. The answer is stored in Gemini's own four tables (<code>gemini_fetches / raw / clean / master</code>), already as one row per number, and is deliberately kept apart from official data. It does not create <code>ds_</code> tables and does not feed the KPIs. <b>This stays as it is.</b></p>
+
+<!-- ============================================================ -->
+<h2>2. Problems with the current design</h2>
+<table class="problem">
+  <tr><th style="width:28%">Problem</th><th>What it means in practice</th></tr>
+  <tr><td>1. Four storage shapes</td><td>Census is wide (one column per figure, ~93 columns), HMIS is read as rows then folded wide (~94 columns), Gemini is one row per number, everything else gets its own table. Every new kind of source needs its own storage and merge code.</td></tr>
+  <tr><td>2. A new table per import</td><td>Each upload or non-Census/HMIS link creates 1–2 <code>ds_</code> tables. Re-fetching the same link adds two more. Nothing ever deletes them, and there is no delete endpoint.</td></tr>
+  <tr><td>3. Same number stored up to 4 times</td><td>Raw, clean, master, then again in <code>dashboard_master</code>. This is the main storage cost.</td></tr>
+  <tr><td>4. Double counting risk</td><td>Census has one row per district; HMIS has one per district per period. The merge repeats each Census value on every HMIS row, so a plain sum is wrong. This once gave an all-India population of 4.4 billion (true value 1,210,854,977). Every KPI must now go through special guard code.</td></tr>
+  <tr><td>5. Only Census/HMIS reach the dashboard</td><td>The merge only knows those two. Uploads, other links and a future Website tab can be viewed and exported, but never appear in KPIs.</td></tr>
+  <tr><td>6. Key reference data is not in the database</td><td>No list of surveys (a survey is just a number anyone types). Places live in a TSV file. An indicator is just a column name: no label, no unit, no rule for whether it can be added up.</td></tr>
+  <tr><td>7. Wide tables hit limits</td><td>One HMIS report year once produced 1,257 columns; PostgreSQL allows at most 1,600 per table.</td></tr>
+  <tr><td>8. No way to read an arbitrary website</td><td>Only plain HTML tables and direct file links work. The JavaScript-page connector is an empty stub.</td></tr>
+</table>
+<p class="note">Also seen (portal side, for the portal team): Save receives a successful 202 response, but the page shows "Network error, please try again".</p>
+
+<!-- ============================================================ -->
+<h2>3. Proposed design</h2>
+
+<h3>3.1 The core idea: one row per number</h3>
+<p>Every number, from any source, answers the same four questions: <b>which place, what is measured, which period, what value</b>. Those become fixed columns. A new kind of figure becomes a new entry in the <b>indicators</b> list, never a new column or table. This is how any website table fits a fixed schema.</p>
+<div class="two">
+<div>
+<b>A table from a website</b>
+<table>
+  <tr><th>District</th><th>Total Beds</th><th>PHCs functional</th></tr>
+  <tr><td>Patna</td><td>3100</td><td>42</td></tr>
+  <tr><td>Gaya</td><td>1250</td><td>18</td></tr>
+</table>
+</div>
+<div>
+<b>Stored in <code>observations</code></b>
+<table>
+  <tr><th>Place</th><th>Indicator</th><th>Period</th><th>Value</th></tr>
+  <tr><td>Patna</td><td>Hospital beds</td><td>2023-24</td><td>3100</td></tr>
+  <tr><td>Patna</td><td>Functional PHCs</td><td>2023-24</td><td>42</td></tr>
+  <tr><td>Gaya</td><td>Hospital beds</td><td>2023-24</td><td>1250</td></tr>
+  <tr><td>Gaya</td><td>Functional PHCs</td><td>2023-24</td><td>18</td></tr>
+</table>
+</div>
+</div>
+<p>Census population sits in the same table (Patna · Population · 2011 · 5,838,465), <b>once per district</b>. Adding it up is simply correct, and "beds per 1,000 people" works across sources. This is the standard layout for statistics systems (for example DHIS2, used by many health ministries).</p>
+
+<h3>3.2 Tables</h3>
+<p>Eight new tables. In the real table, place and indicator are stored as id numbers, not words.</p>
+<table>
+  <tr><th style="width:19%">Table</th><th>Columns and meaning</th><th style="width:16%">Size</th></tr>
+  <tr><td><code>surveys</code></td><td><code>id</code>, <code>name</code> ("Bihar health 2024"), <code>description</code>, <code>created_at</code></td><td>Tens of rows</td></tr>
+  <tr><td><code>places</code></td><td><code>id</code>; <code>name</code>; <code>level</code> (country / state / district / sub-district / village / town / ward); <code>parent_id</code> (Patna → Bihar → India); <code>official_code</code> (Census code); <code>other_names</code> (spellings seen before; grows as admins confirm matches)</td><td>Up to ~650,000; loaded once, rarely changes</td></tr>
+  <tr><td><code>indicators</code></td><td><code>id</code>; <code>code</code> (<code>hospital_beds</code>); <code>name</code>; <code>unit</code> (people, count, %, ₹); <code>how_to_total</code> (sum / average / none); <code>other_names</code> (column headers matched before, e.g. "Total Beds"); <code>created_by</code>, <code>created_at</code></td><td>Hundreds to a few thousand</td></tr>
+  <tr><td><code>imports</code><br><span class="note">replaces <code>datasets</code></span></td><td><code>id</code>; <code>survey_id</code>; <code>source_type</code> (census / hmis / website / upload / link); <code>source_url</code> or file name; <code>source_detail</code> ("table 1", "sheet 2", "PDF page 4"); <code>file_fingerprint</code> (identifies the exact file version; the file itself is not kept); <code>created_by</code>, <code>created_at</code>; <code>status</code>; <code>numbers_saved</code>; <code>notes</code></td><td>One row per save</td></tr>
+  <tr><td><code>observations</code></td><td><code>survey_id</code>; <code>place_id</code>; <code>indicator_id</code>; <code>period_label</code> ("Apr–Jun 2023"); <code>period_start</code>, <code>period_end</code> (dates, for sorting and filtering); <code>value</code>; <code>import_id</code></td><td><b>The table that grows</b>: millions to tens of millions</td></tr>
+  <tr><td><code>loose_tables</code></td><td>Picked tables with no place column (e.g. an all-India trend). <code>id</code>, <code>survey_id</code>, <code>import_id</code>, <code>title</code>, <code>columns</code> (names, JSON list), <code>rows</code> (JSON list of rows, e.g. <code>[[2015, 78.9, "NFHS-4"], …]</code>), <code>row_count</code>. Max 50,000 rows. Viewable and downloadable; not on the dashboard.</td><td>Hundreds</td></tr>
+  <tr><td><code>scans</code></td><td>One row per website Search: <code>id</code>, <code>url</code>, <code>status</code>, <code>started_at</code>, <code>finished_at</code>, <code>expires_at</code>, <code>created_by</code></td><td>Temporary</td></tr>
+  <tr><td><code>scan_findings</code></td><td>One row per thing found: <code>id</code>, <code>scan_id</code>, <code>kind</code> (table / file / text / couldn't read), <code>title</code>, <code>where_found</code>, <code>row_count</code>, <code>column_names</code>, <code>preview</code> (first 20 rows), <code>hints</code> ("looks like a menu", "may contain personal data"), <code>temp_file</code></td><td>Temporary</td></tr>
+</table>
+
+<h3>3.3 How the tables connect</h3>
+<pre>surveys ──&lt; imports ──&lt; observations &gt;── places      (each place ──&gt; its parent place)
+                │              │
+                │              └──────&gt; indicators
+                └──&lt; loose_tables
+
+scans ──&lt; scan_findings            (temporary; Save turns picked findings into imports)
+
+──&lt;  means "one to many": one survey has many imports; one import has many observations.</pre>
+<p><b>Unchanged:</b> <code>jobs</code>, <code>sources</code>, <code>kpi_requests</code>, Gemini's tables.<br>
+<b>Retired at the end:</b> <code>census_*</code>, <code>hmis_*</code>, <code>dashboard_master</code>, <code>datasets</code>, all <code>ds_*</code> tables.</p>
+
+<h3>3.4 Rules</h3>
+<ul>
+  <li><b>One value per survey + place + indicator + period.</b> Saving the same figure again replaces it, so nothing is double-stored. If a save would overwrite figures that came from a different source (e.g. website population over Census population), the admin is warned first.</li>
+  <li><b>Raw files are not stored.</b> Data is cleaned in memory during the save; only the final numbers are written. The file's address, time and fingerprint are recorded.</li>
+  <li><b>Only what the admin picks is stored.</b> Website findings are held temporarily and deleted on Save, or after 24 hours if nobody saves.</li>
+  <li><b>Indicators are created on the spot</b> by the admin while saving. The system first suggests close existing matches to avoid near-duplicates.</li>
+  <li><b>Periods carry their meaning.</b> HMIS values are cumulative year-to-date ("up to June", "up to September"…), so they must never be summed across periods. Each indicator's total rule and each period's start/end date prevent this.</li>
+</ul>
+
+<h3>3.5 Growth and speed</h3>
+<table>
+  <tr><th>What is loaded (per survey)</th><th>Rows in <code>observations</code></th></tr>
+  <tr><td>Census, district level (640 districts × ~80 figures)</td><td>~51,000</td></tr>
+  <tr><td>HMIS, district level (640 × ~90 figures × 4 periods × 2 years)</td><td>~460,000</td></tr>
+  <tr><td>Census, village level (~600,000 villages × ~80 figures)</td><td>~48 million (a few GB)</td></tr>
+</table>
+<ul>
+  <li><b>Partitioned by survey</b>: each survey's rows are kept separately, so reading one survey never scans others, and deleting a survey is instant. (PostgreSQL 11 or newer.)</li>
+  <li><b>Indexes</b> on place, indicator and period for fast lookups.</li>
+  <li><b>A pre-built dashboard summary</b> (materialized view), refreshed after each save. It keeps today's <code>dashboard_master</code> column names, so existing KPI formulas keep working.</li>
+  <li><b>Archiving</b>: unused surveys can later be exported to S3 and removed from the database.</li>
+</ul>
+<p class="note">Honest trade-off: one stored number takes slightly more space as a row than as a cell in a wide table. The saving comes from storing each number once (not four times) and from no longer creating tables per import.</p>
+
+<!-- ============================================================ -->
+<h2>4. The Website tab</h2>
+
+<h3>4.1 What the admin does</h3>
+<div class="flow">
+  <div class="box"><b>1.</b> Enter URL, click Search</div><span class="arr">→</span>
+  <div class="box"><b>2.</b> System finds tables and files</div><span class="arr">→</span>
+  <div class="box"><b>3.</b> Tick what to keep</div><span class="arr">→</span>
+  <div class="box"><b>4.</b> Match places and indicators</div><span class="arr">→</span>
+  <div class="box hl"><b>5.</b> Save</div>
+</div>
+<p class="cap">Uploads and other links skip steps 1–2 and use the same review, match and save steps, so they reach the dashboard too.</p>
+
+<p><b>Review screen</b> (built by the portal team): for each table found, the admin sees its title, size and a preview, plus hints such as "looks like page layout, not data". For each ticked table:</p>
+<table>
+  <tr><th style="width:28%">Item</th><th>What happens</th></tr>
+  <tr><td>Place column</td><td>Detected automatically and matched against <code>places</code>, e.g. "36 of 38 districts matched, 2 unmatched (view)". If there is no state column, the admin picks the state.</td></tr>
+  <tr><td>Each figure column</td><td>Suggested match to an existing indicator ("Total Beds" → Hospital beds), or "+ New" with name, unit and total rule. Text columns are skipped.</td></tr>
+  <tr><td>Period</td><td>Taken from a year column if present, otherwise typed by the admin.</td></tr>
+  <tr><td>No place column</td><td>Saved as a loose table (not on the dashboard).</td></tr>
+  <tr><td>Special shapes</td><td>Many rows per district (e.g. a hospital list): "add up per district" or "count per district". Years as columns: marked as periods. Male/Female columns: folded into the indicator name.</td></tr>
+</table>
+
+<h3>4.2 How Search works</h3>
+<ol>
+  <li><b>Safety check.</b> Only public web addresses are allowed; internal addresses (the server's own network, cloud metadata) are blocked. The site's <code>robots.txt</code> is respected.</li>
+  <li><b>Plain download first.</b> The page is downloaded and searched for HTML tables, data embedded in the page, and links to files (CSV, Excel, JSON, PDF, Word, ZIP).</li>
+  <li><b>Browser only when needed</b> (phase 3). If the page builds its tables with JavaScript, a headless Chromium browser loads it and also captures the data the page fetches in the background, including further pages of results.</li>
+  <li><b>Files are read</b>: spreadsheets per sheet, tables from PDF and Word, files inside ZIPs.</li>
+  <li><b>Blocks are reported, not bypassed</b>: login required, captcha, bot protection, robots.txt refusal, too large, timeout. These appear under "Couldn't read".</li>
+  <li><b>Hints</b> help the admin decide: layout tables, duplicates, mostly-numeric tables, how many places match, possible personal data (never pre-ticked).</li>
+</ol>
+<p><b>Limits</b> <span class="tag call">my call, configurable</span>: 180 seconds per Search, 1 request per second per site, 25 files, 30 MB per file, 200 MB per Search. The bot identifies itself honestly as <code>NimbliDataBot/1.0</code>.</p>
+
+<h3>4.3 Service endpoints (contract for the portal team)</h3>
+<table>
+  <tr><th style="width:42%">Endpoint</th><th>Purpose</th></tr>
+  <tr><td><code>POST /scrape/scan</code> <code>{url}</code></td><td>Start a Search; returns a job (202). The job result gives the <code>scan_id</code>.</td></tr>
+  <tr><td><code>GET /scrape/scans/{scan_id}</code></td><td>Everything found: tables (with preview and hints), files, text, blocked items.</td></tr>
+  <tr><td><code>GET /scrape/scans/{scan_id}/findings/{id}/rows</code></td><td>More rows of one table, page by page.</td></tr>
+  <tr><td><code>POST /scrape/scans/{scan_id}/findings/{id}/match</code></td><td>Suggested place column, place match counts, indicator suggestions, period guess.</td></tr>
+  <tr><td><code>POST /scrape/scans/{scan_id}/save</code></td><td>Save the ticked tables with the admin's choices (survey, place column, indicator per column, period). Returns a job. Deletes everything not picked afterwards.</td></tr>
+  <tr><td><code>DELETE /scrape/scans/{scan_id}</code></td><td>Discard a Search immediately.</td></tr>
+  <tr><td><code>POST /scrape/upload</code></td><td>Uploads use the same flow: the file becomes a scan with its findings.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>5. Rollout</h2>
+<table>
+  <tr><th style="width:12%">Phase</th><th>Work</th><th style="width:30%">Done when</th></tr>
+  <tr><td>1</td><td>New tables (migration generated; applied manually). Load <code>places</code> from the district list and Census codes; load <code>indicators</code> from current Census/HMIS columns.</td><td>Reference lists complete; existing features unaffected.</td></tr>
+  <tr><td>2</td><td>Website tab for normal pages and files; Uploads and other links move to the same review-and-save flow.</td><td>Picked tables appear on the dashboard; no <code>ds_</code> tables created.</td></tr>
+  <tr><td>3</td><td>Browser for JavaScript-heavy sites (Chromium on the server).</td><td>Dynamic pages and background data feeds can be read.</td></tr>
+  <tr><td>4</td><td>Copy Census/HMIS into <code>observations</code>; build the dashboard summary; compare every KPI old vs new; then switch KPIs and fetches over.</td><td>All KPI numbers match exactly (all-India population = 1,210,854,977).</td></tr>
+  <tr><td>5</td><td>Retire old tables, after a backup.</td><td>Old tables removed.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>6. Risks</h2>
+<table>
+  <tr><th style="width:28%">Risk</th><th>How it is handled</th></tr>
+  <tr><td>KPI numbers change during the switch</td><td>Old and new run side by side; switch only when every number matches.</td></tr>
+  <tr><td>Place names don't match</td><td>Admin sees unmatched names before saving; confirmed spellings are remembered.</td></tr>
+  <tr><td>Near-duplicate indicators</td><td>Suggestions shown before creating a new one; a merge tool can follow.</td></tr>
+  <tr><td>Websites block us or change</td><td>Blocks are shown, never bypassed. Re-running a Search and saving again replaces the earlier values.</td></tr>
+  <tr><td>Security of fetching any URL</td><td>Internal addresses blocked, including for the browser; downloaded files never executed.</td></tr>
+  <tr><td>Table size at village level</td><td>Partitioning, indexes, dashboard summary, archiving.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>7. Decisions and open questions</h2>
+<p><span class="tag decided">Decided</span></p>
+<ul>
+  <li>Store only what the admin picks; original files are not kept.</li>
+  <li>Census and HMIS move to the new design, in phases.</li>
+  <li>All place levels are supported, down to village and ward.</li>
+  <li>Tables without places are kept as loose tables, not on the dashboard.</li>
+  <li>Uploads and other links use the same flow as the Website tab.</li>
+  <li>Admins create new indicators on the spot.</li>
+  <li>The portal screens and backend are built by the portal team against the contract in 4.3.</li>
+  <li>Gemini data stays separate.</li>
+</ul>
+<p><span class="tag open">For the tech lead</span></p>
+<ol>
+  <li><b>Hosting</b>: it runs on AWS. Please confirm the server type, number of worker processes, free memory (the browser needs ~0.5–1 GB), and the PostgreSQL version (11+ needed for partitioning).</li>
+  <li>Is <b>partitioning by survey</b> the right split, or should it be by survey and level?</li>
+  <li>Should the <b>background job runner</b> (currently 2 threads inside the web process) move to a separate worker before the browser is added?</li>
+  <li>Who may <b>create indicators</b> (any admin, or certain roles), and is a later merge/clean-up tool needed?</li>
+</ol>
+
+<h2>Glossary</h2>
+<table>
+  <tr><td style="width:22%"><b>Survey</b></td><td>A named group of data that belongs together; re-fetching under the same survey replaces its values.</td></tr>
+  <tr><td><b>Indicator</b></td><td>What a number measures: "Population", "Hospital beds".</td></tr>
+  <tr><td><b>Observation</b></td><td>One number: survey + place + indicator + period → value.</td></tr>
+  <tr><td><b>Import</b></td><td>One act of bringing data in (one fetch, upload or website save).</td></tr>
+  <tr><td><b>Job</b></td><td>A background task; the portal checks it until it finishes.</td></tr>
+  <tr><td><b>KPI</b></td><td>A dashboard figure computed from stored numbers by fixed code.</td></tr>
+</table>
+
+</body>
+</html>

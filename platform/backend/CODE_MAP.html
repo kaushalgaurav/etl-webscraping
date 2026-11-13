@@ -1,0 +1,1220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ETL Platform Code Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87,600;87,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: sticky folder index on the left, one reading column on the right; stacks to a single column under 860px */
+:root {
+  --bg: #f3f5f7;
+  --surface: #ffffff;
+  --fg: #172029;
+  --muted: #586473;
+  --line: #d8dee5;
+  --accent: #0c6a64;
+  --accent-soft: #dcefeb;
+  --raw: #8f531a;
+  --raw-soft: #f5e9da;
+  --clean: #285fa3;
+  --clean-soft: #dfe9f6;
+  --master: #29764a;
+  --master-soft: #ddefe3;
+  --warn: #973f18;
+  --warn-soft: #faeae0;
+  --code: #e8ecf0;
+  --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11161c; --surface: #19202a; --fg: #e3e8ed; --muted: #98a4b1; --line: #29323d;
+    --accent: #52b8ad; --accent-soft: #15322f;
+    --raw: #e2a862; --raw-soft: #33261a; --clean: #82b1ea; --clean-soft: #1a2a3e; --master: #76c596; --master-soft: #17301f;
+    --warn: #f0a37e; --warn-soft: #3a2319; --code: #161c24;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11161c; --surface: #19202a; --fg: #e3e8ed; --muted: #98a4b1; --line: #29323d;
+  --accent: #52b8ad; --accent-soft: #15322f;
+  --raw: #e2a862; --raw-soft: #33261a; --clean: #82b1ea; --clean-soft: #1a2a3e; --master: #76c596; --master-soft: #17301f;
+  --warn: #f0a37e; --warn-soft: #3a2319; --code: #161c24;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.6; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+a { color: var(--accent); text-underline-offset: 2px; }
+code, pre, kbd { font-family: var(--mono); font-size: 0.86em; }
+:not(pre) > code { background: var(--code); padding: 0.08em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+.wrap {
+  display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 48px;
+  max-width: 1180px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 80px;
+}
+
+/* ---------- folder index ---------- */
+aside.index {
+  position: sticky; top: env(safe-area-inset-top, 0px); align-self: start;
+  max-height: 100vh; overflow-y: auto; padding-block: 8px 24px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.brand { font-family: var(--display); font-stretch: 87%; font-weight: 700; font-size: 15px; letter-spacing: 0.01em; }
+.brand span { display: block; font-family: var(--mono); font-weight: 400; font-size: 12px; color: var(--muted); letter-spacing: 0; }
+.search { display: flex; flex-direction: column; gap: 6px; }
+.search label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+.search input {
+  width: 100%; font: inherit; font-size: 14px; color: var(--fg); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px;
+}
+.search input::placeholder { color: var(--muted); }
+.search input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.status { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+details.toc > summary { cursor: pointer; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; list-style: none; }
+details.toc > summary::-webkit-details-marker { display: none; }
+details.toc > summary::after { content: " ▾"; }
+details.toc:not([open]) > summary::after { content: " ▸"; }
+.toc nav { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
+.toc .grp-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
+.toc ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.toc a {
+  display: flex; justify-content: space-between; gap: 8px; align-items: baseline;
+  text-decoration: none; color: var(--fg); font-family: var(--mono); font-size: 13px;
+  padding: 3px 8px; border-radius: 5px;
+}
+.toc a:hover { background: var(--surface); }
+.toc a[aria-current="true"] { background: var(--accent-soft); color: var(--accent); }
+.toc a .n { color: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.toc li[hidden] { display: none; }
+
+/* ---------- main column ---------- */
+main { min-width: 0; display: flex; flex-direction: column; gap: 56px; }
+h1, h2, h3 { font-family: var(--display); font-stretch: 87%; text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: 40px; font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 26px; font-weight: 700; }
+h2 .path { color: var(--muted); font-weight: 600; }
+.eyebrow { font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+.lede { font-size: 17px; max-width: 64ch; margin: 0; }
+.prose { max-width: 68ch; }
+.prose p { margin: 0; }
+
+header.hero { display: flex; flex-direction: column; gap: 12px; padding-top: 6px; }
+
+.overview { display: flex; flex-direction: column; gap: 40px; }
+.block { display: flex; flex-direction: column; gap: 14px; }
+.block > h2 { font-size: 22px; }
+
+/* pipeline */
+.pipe { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; counter-reset: step; }
+.pipe li {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 12px 14px;
+  display: flex; flex-direction: column; gap: 6px; counter-increment: step; min-width: 0;
+}
+.pipe .step { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; color: var(--muted); }
+.pipe .step::before { content: counter(step) " · "; font-variant-numeric: tabular-nums; }
+.pipe .tables { font-family: var(--mono); font-size: 12.5px; line-height: 1.45; overflow-wrap: anywhere; }
+.pipe .who { font-size: 13px; color: var(--muted); margin-top: auto; }
+.pipe .who a { font-family: var(--mono); font-size: 12.5px; }
+.stage { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; padding: 1px 7px; border-radius: 99px; align-self: flex-start; }
+.stage.raw { color: var(--raw); background: var(--raw-soft); }
+.stage.clean { color: var(--clean); background: var(--clean-soft); }
+.stage.master { color: var(--master); background: var(--master-soft); }
+.stage.out { color: var(--accent); background: var(--accent-soft); }
+.aside-line { font-size: 14px; color: var(--muted); max-width: 70ch; margin: 0; }
+
+/* legend of recurring file names */
+.legend { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 18px; margin: 0; max-width: 76ch; }
+.legend dt { font-family: var(--mono); font-size: 13.5px; font-weight: 500; }
+.legend dd { margin: 0; }
+
+/* walkthrough */
+ol.walk { margin: 0; padding: 0; list-style: none; counter-reset: w; display: flex; flex-direction: column; gap: 12px; max-width: 76ch; }
+ol.walk li { counter-increment: w; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; }
+ol.walk li::before {
+  content: counter(w); font-family: var(--display); font-stretch: 87%; font-weight: 700; font-size: 15px;
+  width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent); font-variant-numeric: tabular-nums;
+}
+ol.walk .where { display: block; font-size: 13px; color: var(--muted); }
+ol.walk .where a { font-family: var(--mono); font-size: 12.5px; }
+
+.two-store { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.two-store > div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.two-store h3 { font-size: 16px; }
+.two-store p { margin: 0; font-size: 14px; }
+
+/* sections */
+section.mod { display: flex; flex-direction: column; gap: 6px; scroll-margin-top: 16px; }
+section.mod > .intro { max-width: 70ch; margin: 6px 0 4px; color: var(--fg); }
+.files { display: flex; flex-direction: column; }
+article.file { border-top: 1px solid var(--line); padding-block: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.fhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+.fhead h3 { font-family: var(--mono); font-stretch: normal; font-size: 16px; font-weight: 500; }
+.fhead .loc { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; margin-left: auto; }
+.tag { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; padding: 1px 7px; border-radius: 99px; }
+.tag.key { color: var(--accent); background: var(--accent-soft); }
+.tag.stub { color: var(--warn); background: var(--warn-soft); }
+.tag.ai { color: var(--clean); background: var(--clean-soft); }
+article.file > p { margin: 0; max-width: 72ch; }
+
+dl.parts { display: grid; grid-template-columns: minmax(150px, max-content) minmax(0, 1fr); gap: 6px 16px; margin: 0; max-width: 80ch; }
+dl.parts dt { font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; padding-top: 1px; }
+dl.parts dd { margin: 0; font-size: 14.5px; }
+
+.routes-wrap { overflow-x: auto; max-width: 80ch; }
+table.routes { border-collapse: collapse; width: 100%; font-size: 14px; }
+table.routes td { padding: 5px 10px 5px 0; vertical-align: top; border-bottom: 1px solid var(--line); }
+table.routes tr:last-child td { border-bottom: 0; }
+table.routes td:nth-child(2) { font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+.m { font-family: var(--mono); font-size: 11.5px; font-weight: 500; letter-spacing: 0.04em; white-space: nowrap; }
+.m.get { color: var(--muted); }
+.m.post { color: var(--accent); }
+.m.del { color: var(--warn); }
+
+pre {
+  margin: 0; background: var(--code); border-radius: 6px; padding: 12px 14px;
+  overflow-x: auto; font-size: 12.8px; line-height: 1.55; max-width: 80ch;
+}
+pre .c { color: var(--muted); font-style: italic; }
+.snip-label { font-size: 12px; color: var(--muted); margin-bottom: -4px; }
+
+.note { margin: 0; font-size: 14px; background: var(--warn-soft); color: var(--fg); border-radius: 6px; padding: 8px 12px; max-width: 76ch; }
+.note b { color: var(--warn); font-weight: 600; }
+.pkg { font-size: 14px; color: var(--muted); max-width: 72ch; margin: 0; border-top: 1px solid var(--line); padding-top: 14px; }
+
+.empty { border: 1px dashed var(--line); border-radius: 8px; padding: 24px; color: var(--muted); }
+.empty strong { color: var(--fg); }
+
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (max-width: 860px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 16px 64px; }
+  aside.index { position: static; max-height: none; overflow: visible; }
+  .search { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 8px; }
+  h1 { font-size: 31px; }
+  h2 { font-size: 22px; }
+  dl.parts { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  dl.parts dd { margin-bottom: 8px; }
+  .legend { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .legend dd { margin-bottom: 8px; }
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <aside class="index" aria-label="Folder index">
+    <div class="brand">ETL Platform Code Map<span>platform/backend/</span></div>
+    <div class="search">
+      <label for="q">Find a file, function or table</label>
+      <input id="q" type="search" placeholder="e.g. census_master, enqueue, survey_id" autocomplete="off">
+      <div class="status" id="status" aria-live="polite">86 files in 25 folders</div>
+    </div>
+    <details class="toc" id="toc" open>
+      <summary>Folders</summary>
+      <nav id="nav">
+        <div>
+          <div class="grp-label">Overview</div>
+          <ul><li><a href="#overview">How it fits together</a></li></ul>
+        </div>
+        <div>
+          <div class="grp-label">Start-up and shared code</div>
+          <ul>
+            <li><a href="#app">app/ <span class="n"></span></a></li>
+            <li><a href="#core">core/ <span class="n"></span></a></li>
+            <li><a href="#db">db/ <span class="n"></span></a></li>
+            <li><a href="#models">models/ <span class="n"></span></a></li>
+            <li><a href="#crud">crud/ <span class="n"></span></a></li>
+            <li><a href="#helpers">helpers/ <span class="n"></span></a></li>
+            <li><a href="#constants">constants/ <span class="n"></span></a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="grp-label">Getting data in</div>
+          <ul>
+            <li><a href="#sources">sources/ <span class="n"></span></a></li>
+            <li><a href="#jobs">jobs/ <span class="n"></span></a></li>
+            <li><a href="#ingestion">ingestion/ <span class="n"></span></a></li>
+            <li><a href="#connectors">connectors/ <span class="n"></span></a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="grp-label">Cleaning and storing</div>
+          <ul>
+            <li><a href="#cleaning">cleaning/ <span class="n"></span></a></li>
+            <li><a href="#profiling">profiling/ <span class="n"></span></a></li>
+            <li><a href="#census-warehouse">census_warehouse/ <span class="n"></span></a></li>
+            <li><a href="#hmis-warehouse">hmis_warehouse/ <span class="n"></span></a></li>
+            <li><a href="#warehouse">warehouse/ <span class="n"></span></a></li>
+            <li><a href="#datasets">datasets/ <span class="n"></span></a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="grp-label">Combining and measuring</div>
+          <ul>
+            <li><a href="#merging">merging/ <span class="n"></span></a></li>
+            <li><a href="#analytics">analytics/ <span class="n"></span></a></li>
+            <li><a href="#kpi">kpi/ <span class="n"></span></a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="grp-label">Output and AI data</div>
+          <ul>
+            <li><a href="#reports">reports/ <span class="n"></span></a></li>
+            <li><a href="#ai-data">ai_data/ <span class="n"></span></a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="grp-label">Outside app/</div>
+          <ul>
+            <li><a href="#alembic">alembic/ <span class="n"></span></a></li>
+            <li><a href="#scripts">scripts <span class="n"></span></a></li>
+            <li><a href="#other">other files <span class="n"></span></a></li>
+          </ul>
+        </div>
+      </nav>
+    </details>
+  </aside>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">platform/backend · FastAPI · pandas · SQLite or PostgreSQL</div>
+      <h1>ETL Platform Code Map</h1>
+      <p class="lede">Every folder and file in the backend, explained in plain language: what it is for, what is inside it, and how it connects to the rest. The project collects Indian health and population data (Census 2011, HMIS, data.gov.in), cleans it, combines it and calculates indicators from it.</p>
+    </header>
+
+    <!-- ================= OVERVIEW ================= -->
+    <div class="overview" id="overview">
+      <div class="block">
+        <h2>How data moves through the code</h2>
+        <ol class="pipe">
+          <li><span class="step">Fetch</span><span class="tables">Census API, HMIS site, data.gov.in, files, web pages</span><span class="who">by <a href="#ingestion">ingestion/</a> and <a href="#connectors">connectors/</a></span></li>
+          <li><span class="step">Store raw</span><span class="stage raw">raw</span><span class="tables">census_raw<br>hmis_raw<br>ds_&lt;id&gt;</span><span class="who">exactly as received</span></li>
+          <li><span class="step">Clean</span><span class="stage clean">clean</span><span class="tables">census_clean<br>hmis_clean</span><span class="who">by <a href="#cleaning">cleaning/</a></span></li>
+          <li><span class="step">Finalize</span><span class="stage master">master</span><span class="tables">census_master<br>hmis_master</span><span class="who">one row per place, newest wins</span></li>
+          <li><span class="step">Merge</span><span class="stage out">output</span><span class="tables">dashboard_master</span><span class="who">by <a href="#merging">merging/</a></span></li>
+          <li><span class="step">Measure</span><span class="stage out">output</span><span class="tables">KPIs, CSV, PDF</span><span class="who">by <a href="#kpi">kpi/</a> and <a href="#reports">reports/</a></span></li>
+        </ol>
+        <p class="aside-line">Slow steps (fetching, merging) run as background jobs in <a href="#jobs">jobs/</a>. Answers from Google Gemini follow their own path in <a href="#ai-data">ai_data/</a> and are stored in separate <code>gemini_*</code> tables that never mix with the official data.</p>
+      </div>
+
+      <div class="block">
+        <h2>Two ways data is stored</h2>
+        <div class="two-store">
+          <div>
+            <h3>Its own table per fetch</h3>
+            <p>Simple sources (a data.gov.in resource, a CSV, a web page table) each get a new table named <code>ds_&lt;id&gt;</code>. A row in the <code>datasets</code> table describes it. A cleaned copy gets its own new table and its own <code>datasets</code> row, linked back to the original.</p>
+          </div>
+          <div>
+            <h3>Shared stage tables</h3>
+            <p>Census and HMIS go into shared tables, one per stage (<code>census_raw</code>, <code>census_clean</code>, <code>census_master</code>, and the same for HMIS). Every row is stamped with the fetch it came from, the time, and its <code>survey_id</code>. Fetching again under the same <code>survey_id</code> replaces that survey's rows.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2>File names you'll see in every module</h2>
+        <dl class="legend">
+          <dt>router.py</dt><dd>The web addresses (endpoints) the module answers, such as <code>POST /ingest/fetch</code>. It checks the request and hands the work to the service.</dd>
+          <dt>service.py</dt><dd>The actual work: fetching, cleaning, joining, calculating.</dd>
+          <dt>schemas.py</dt><dd>With an <b>s</b>. The shape of requests and replies: which fields a request may send and what comes back.</dd>
+          <dt>schema.py</dt><dd>Without an s. The shape of the warehouse <em>tables</em>: table names and which columns identify a row.</dd>
+          <dt>__init__.py</dt><dd>Marks a folder as a Python package. Almost all are empty.</dd>
+        </dl>
+      </div>
+
+      <div class="block">
+        <h2>Follow one request from start to finish</h2>
+        <ol class="walk">
+          <li><div>You send <code>POST /ingest/fetch</code> with a Census URL and <code>survey_id: 1</code>.<span class="where"><a href="#f-ingestion-router">ingestion/router.py</a></span></div></li>
+          <li><div>The request is checked against <code>FetchRequest</code>, a job is queued, and you get a job id back at once (status 202). You check progress with <code>GET /jobs/{id}</code>.<span class="where"><a href="#f-ingestion-schemas">ingestion/schemas.py</a> · <a href="#f-jobs-service">jobs/service.py</a></span></div></li>
+          <li><div>A worker thread picks up the job and calls <code>run_fetch()</code>, which sees the host <code>censusindia.gov.in</code> and takes the Census path.<span class="where"><a href="#f-ingestion-service">ingestion/service.py</a></span></div></li>
+          <li><div>The Census connector calls the Census API page by page. Each chunk is added to <code>census_raw</code>, stamped with survey 1.<span class="where"><a href="#f-census-india">connectors/census_india.py</a> · <a href="#f-crud-dataset">crud/dataset.py</a></span></div></li>
+          <li><div>You call <code>POST /warehouse/census/rebuild?survey_id=1</code>. It cleans <code>census_raw</code> into <code>census_clean</code>, then keeps one row per place in <code>census_master</code>.<span class="where"><a href="#f-warehouse-router">warehouse/router.py</a> · <a href="#f-census-service">census_warehouse/service.py</a></span></div></li>
+          <li><div>After fetching HMIS the same way, <code>POST /datasets/merge</code> joins <code>census_master</code> and <code>hmis_master</code> for survey 1 into <code>dashboard_master</code>.<span class="where"><a href="#f-merging-run">merging/run.py</a> · <a href="#f-merging-survey">merging/survey.py</a></span></div></li>
+          <li><div><code>GET /kpi/dashboard?survey_id=1</code> calculates the 28 dashboard cards, counting each district's population only once.<span class="where"><a href="#f-kpi-indicators">kpi/indicators.py</a> · <a href="#f-kpi-aggregation">kpi/aggregation.py</a></span></div></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="empty" id="empty" hidden><strong>No file matches that search.</strong> Try a table name (<code>hmis_master</code>), a function (<code>build_master</code>) or a word like "district".</div>
+
+    <!-- ================= app/ ================= -->
+    <section class="mod" id="app" data-title="app/ top level main routes schemas">
+      <h2><span class="path">app/</span> top level</h2>
+      <p class="intro">The front door. These files start the server and plug every module's web addresses into one app. They hold almost no logic of their own.</p>
+      <div class="files">
+        <article class="file" id="f-main">
+          <div class="fhead"><h3>main.py</h3><span class="tag key">Start here</span><span class="loc">37 lines</span></div>
+          <p>Starts the server. It creates the FastAPI app, lets browsers call it from any website (CORS, fine for local use but to be tightened before going live), plugs in all routes, and adds a <code>GET /health</code> check. On start it runs <code>init_db()</code>; on stop it shuts down the background job workers. <code>root_path="/etl"</code> is there because the live server sits behind a proxy under <code>/etl</code>.</p>
+          <pre><span class="c"># runs when the server starts (before yield) and stops (after)</span>
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+    shutdown_jobs()
+
+app = FastAPI(title="Data Ingestion &amp; Analytics Platform", version="0.2.0",
+              lifespan=lifespan, root_path="/etl")
+app.include_router(api_router)</pre>
+        </article>
+        <article class="file" id="f-routes">
+          <div class="fhead"><h3>routes/__init__.py</h3><span class="loc">31 lines</span></div>
+          <p>Collects the routers of all nine modules into one <code>api_router</code>. The order matters. <code>merging</code> owns <code>/datasets/merge</code> and must come before <code>datasets</code>, which owns <code>/datasets/{dataset_id}</code>. In the other order, a request to <code>/datasets/merge</code> would be read as "show me the dataset whose id is <em>merge</em>".</p>
+          <pre>api_router.include_router(ai_data_router)
+<span class="c"># Static /datasets/... paths first, parameterized last.</span>
+api_router.include_router(merging_router)
+api_router.include_router(reports_router)
+api_router.include_router(kpi_router)
+api_router.include_router(datasets_router)</pre>
+        </article>
+        <article class="file" id="f-schemas-root">
+          <div class="fhead"><h3>schemas.py</h3><span class="loc">23 lines</span></div>
+          <p>Reply shapes used by more than one module. It holds <code>DatasetOut</code>, the description of a dataset sent back to the client: id, name, stage, connector, source, row and column counts, parent datasets, notes, error and creation time. Shapes used by only one module live in that module's own <code>schemas.py</code>.</p>
+        </article>
+      </div>
+      <p class="pkg">Each folder also has an <code>__init__.py</code>. Most are empty. The ones in <code>db/</code> and <code>models/</code> only re-export names, so other files can write <code>from app.models import Dataset</code> instead of the full path.</p>
+    </section>
+
+    <!-- ================= core/ ================= -->
+    <section class="mod" id="core" data-title="core/ config settings">
+      <h2><span class="path">app/</span>core/</h2>
+      <p class="intro">Settings for the whole app.</p>
+      <div class="files">
+        <article class="file" id="f-config">
+          <div class="fhead"><h3>config.py</h3><span class="tag key">Start here</span><span class="loc">59 lines</span></div>
+          <p>All settings in one place. It sets folder paths relative to the code, so the app works whichever folder you start it from: <code>data/raw/</code> for downloads, <code>data/exports/</code> for CSV output, <code>data/warehouse/platform.db</code> for the SQLite file. The <code>Settings</code> class reads values from environment variables or <code>.env</code>.</p>
+          <dl class="parts">
+            <dt>database_url</dt><dd>Which database to use. Empty means the SQLite file.</dd>
+            <dt>anthropic_api_key, claude_model</dt><dd>For the Claude KPI features.</dd>
+            <dt>gemini_api_key, gemini_model, gemini_requests_per_minute, gemini_retries</dt><dd>For the Gemini data features.</dd>
+            <dt>max_upload_mb, request_timeout_seconds</dt><dd>Largest upload, and how long to wait for a website.</dd>
+            <dt>max_profile_sample_rows</dt><dd>How many sample rows Claude is shown.</dd>
+            <dt>delete_source_files_after_ingest</dt><dd>Delete downloaded files once their rows are saved (default yes).</dd>
+            <dt>job_workers</dt><dd>Meant to set how many background jobs run at once.</dd>
+          </dl>
+          <p class="note"><b>Heads-up.</b> <code>job_workers</code> is never read; the job pool is fixed at 2 in <code>jobs/service.py</code>. And <code>DATA_GOV_IN_API_KEY</code> is not here at all: <code>data_gov_in.py</code> reads it straight from the terminal environment, so putting it in <code>.env</code> has no effect.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= db/ ================= -->
+    <section class="mod" id="db" data-title="db/ database session engine init_db">
+      <h2><span class="path">app/</span>db/</h2>
+      <p class="intro">The database connection and what happens on first start.</p>
+      <div class="files">
+        <article class="file" id="f-db-base">
+          <div class="fhead"><h3>base.py</h3><span class="loc">6 lines</span></div>
+          <p>The parent class every table model inherits from (SQLAlchemy's <code>DeclarativeBase</code>). Alembic reads it to learn which tables the code expects to exist.</p>
+        </article>
+        <article class="file" id="f-db-session">
+          <div class="fhead"><h3>session.py</h3><span class="loc">37 lines</span></div>
+          <p>Creates the database connection (<code>engine</code>) and a factory for sessions (<code>SessionLocal</code>). For SQLite it allows use from several threads and waits up to 30 seconds when the file is busy, because jobs and web requests write at the same time. For PostgreSQL it checks a connection is still alive before using it, since long jobs otherwise hit connections the server has closed. <code>get_db()</code> gives each web request its own session and closes it afterwards.</p>
+        </article>
+        <article class="file" id="f-db-init">
+          <div class="fhead"><h3>init_db.py</h3><span class="loc">51 lines</span></div>
+          <p>Runs once when the server starts. It loads the list of data sources from <code>seed_sources.json</code> into the <code>sources</code> table, skipping ones already there, and marks any job still "running" from a previous server run as failed. It also has <code>run_migrations()</code>, but that call is commented out, so tables are never created automatically. You run <code>alembic upgrade head</code> yourself.</p>
+          <pre>def init_db() -&gt; None:
+    #run_migrations()
+    ...
+    db = SessionLocal()
+    try:
+        seed_sources(db)
+        orphaned = reap_orphaned_jobs(db)</pre>
+        </article>
+        <article class="file" id="f-db-initpy">
+          <div class="fhead"><h3>__init__.py</h3><span class="loc">5 lines</span></div>
+          <p>Re-exports <code>Base</code>, <code>SessionLocal</code>, <code>engine</code>, <code>get_db</code> and <code>init_db</code> so other files can import them from <code>app.db</code>.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= models/ ================= -->
+    <section class="mod" id="models" data-title="models/ tables orm dataset source job kpi">
+      <h2><span class="path">app/</span>models/</h2>
+      <p class="intro">Python descriptions of the five fixed tables, which Alembic migrations create. The data tables themselves (<code>census_raw</code>, <code>ds_&lt;id&gt;</code> and so on) are not described here; they are created on the fly when data is saved.</p>
+      <div class="files">
+        <article class="file" id="f-models-common">
+          <div class="fhead"><h3>common.py</h3><span class="loc">16 lines</span></div>
+          <p>Three helpers: <code>new_id()</code> makes a random id, <code>utcnow()</code> gives the current time, and <code>dataset_table_name(id)</code> returns <code>ds_&lt;id&gt;</code>, the name of a dataset's own table.</p>
+        </article>
+        <article class="file" id="f-models-dataset">
+          <div class="fhead"><h3>dataset.py</h3><span class="tag key">Start here</span><span class="loc">50 lines</span></div>
+          <p><code>Dataset</code> is the label on every box of data. One row per stored set of data, recording: name, stage (raw, clean, master), the connector that produced it, <code>survey_id</code>, <code>source_ref</code> (the URL or settings it came from), where the raw file is on disk, which table holds its rows, row and column counts, <code>parent_ids</code> (which datasets it was built from), <code>notes</code> (what was done to it) and any error. <code>Profile</code> stores saved column statistics for a dataset.</p>
+        </article>
+        <article class="file" id="f-models-source">
+          <div class="fhead"><h3>source.py</h3><span class="loc">39 lines</span></div>
+          <p><code>Source</code>: one row per data source you can run again and again. It records the name, which connector reads it, its settings (<code>config</code>), geography level, theme, publisher, licence, source web page, whether it is enabled, and the time, status and error of its last run.</p>
+        </article>
+        <article class="file" id="f-models-job">
+          <div class="fhead"><h3>job.py</h3><span class="loc">31 lines</span></div>
+          <p><code>Job</code>: one row per background task. It records the job type, status (queued, running, succeeded, failed), progress text, result, error, and start and finish times.</p>
+        </article>
+        <article class="file" id="f-models-kpi">
+          <div class="fhead"><h3>kpi.py</h3><span class="loc">23 lines</span></div>
+          <p><code>KpiRequest</code>: one row per question asked to Claude about KPIs. It keeps the prompt, the survey, the proposal and computed results (<code>kpi_json</code>), Claude's narrative and any error.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= crud/ ================= -->
+    <section class="mod" id="crud" data-title="crud/ read write tables">
+      <h2><span class="path">app/</span>crud/</h2>
+      <p class="intro">Reading and writing data tables. "CRUD" stands for create, read, update, delete.</p>
+      <div class="files">
+        <article class="file" id="f-crud-dataset">
+          <div class="fhead"><h3>dataset.py</h3><span class="tag key">Start here</span><span class="loc">380 lines</span></div>
+          <p>The workhorse for saving and loading data tables.</p>
+          <dl class="parts">
+            <dt>persist_dataframe()</dt><dd>Registers a new <code>Dataset</code> row and writes the table into its own <code>ds_&lt;id&gt;</code>.</dd>
+            <dt>create_dataset_shell(), append_dataframe()</dt><dd>The same, but in pieces: register first, then add chunks. New columns in a later chunk are added to the table. Used by long Census and HMIS pulls.</dd>
+            <dt>save_raw_file()</dt><dd>Keeps the downloaded file under <code>data/raw/&lt;id&gt;/</code>.</dd>
+            <dt>load_dataframe(), load_page()</dt><dd>Read data back. <code>load_page()</code> reads one page at a time so big tables stay on disk.</dd>
+            <dt>clear_survey()</dt><dd>Deletes one survey's rows from a shared table and retires its old datasets.</dd>
+            <dt>safe_column_names()</dt><dd>Makes column names safe for PostgreSQL: at most 63 bytes, no duplicates.</dd>
+            <dt>pg_copy_insert()</dt><dd>Uses PostgreSQL's fast bulk COPY instead of row-by-row inserts.</dd>
+          </dl>
+        </article>
+        <article class="file" id="f-crud-rows">
+          <div class="fhead"><h3>warehouse_rows.py</h3><span class="loc">227 lines</span></div>
+          <p>Reads pages of rows from the shared stage tables (<code>census_raw</code>, <code>hmis_master</code> and so on), with filters, and can limit them to rows produced by one job. Paging is done inside the database because these tables hold millions of rows. <code>read_rows_wide()</code> turns a one-value-per-row table into one row per record with indicators as columns.</p>
+        </article>
+        <article class="file" id="f-crud-survey">
+          <div class="fhead"><h3>warehouse_survey.py</h3><span class="loc">47 lines</span></div>
+          <p>Small helpers for acting on one survey inside a shared table: <code>where()</code> builds the <code>WHERE survey_id = …</code> filter, <code>clear()</code> deletes that survey's rows before a rebuild, and <code>stamp()</code> writes the <code>survey_id</code> on every row.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= helpers/ ================= -->
+    <section class="mod" id="helpers" data-title="helpers/ dataframe snake_case json">
+      <h2><span class="path">app/</span>helpers/</h2>
+      <div class="files">
+        <article class="file" id="f-helpers-df">
+          <div class="fhead"><h3>dataframe.py</h3><span class="loc">22 lines</span></div>
+          <p><code>snake_case()</code> turns "Total Population" into <code>total_population</code>. <code>json_safe_records()</code> turns a table into a list of rows for the API, replacing empty numbers (NaN) with <code>null</code> so the reply is valid JSON.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= constants/ ================= -->
+    <section class="mod" id="constants" data-title="constants/ reference data tsv">
+      <h2><span class="path">app/</span>constants/</h2>
+      <p class="intro">Reference lists and fixed rules. Several <code>.py</code> files here sit beside a <code>.tsv</code> (tab-separated) file: the <code>.tsv</code> holds the data and the <code>.py</code> loads it and looks things up. To change the data, edit the <code>.tsv</code>, not the code.</p>
+      <div class="files">
+        <article class="file" id="f-crosswalk">
+          <div class="fhead"><h3>district_crosswalk.py + .tsv</h3><span class="tag key">Start here</span><span class="loc">157 lines + 651 districts</span></div>
+          <p>The master list of districts. Every source spells districts differently, so all of them are matched to this one list, and <code>unique_id</code> becomes the column everything is joined on.</p>
+          <dl class="parts">
+            <dt>lookup_district(state, district)</dt><dd>Cleans the name (lowercase, drops words like "district", "zila", "rural"), applies known aliases (Cuddapah becomes Y.S.R. (Cuddapah)), then looks it up <em>within that state</em>, because names such as Aurangabad exist in two states.</dd>
+            <dt>lookup_state(state)</dt><dd>The official state name and id.</dd>
+            <dt>is_summary_row()</dt><dd>Spots a report's own "state total" line so it isn't treated as a district.</dd>
+          </dl>
+          <div class="snip-label">district_crosswalk.tsv, first rows</div>
+          <pre>state            state_id  district  district_id  unique_id
+Jammu &amp; Kashmir  1         Kathua    7            17
+Jammu &amp; Kashmir  1         Jammu     21           121</pre>
+        </article>
+        <article class="file" id="f-state-aliases">
+          <div class="fhead"><h3>state_aliases.py</h3><span class="loc">60 lines</span></div>
+          <p>The official spelling of each state and union territory: "Orissa" becomes Odisha, "NCT of Delhi" becomes Delhi, "Pondicherry" becomes Puducherry. Without it, joins between sources silently miss rows. Copied from the older ETL so both agree.</p>
+        </article>
+        <article class="file" id="f-canonical">
+          <div class="fhead"><h3>canonical_fields.py</h3><span class="loc">45 lines</span></div>
+          <p>The dictionary of column names that mean the same thing, for example <code>unique_id</code> = <code>district_unique_id</code> = <code>area_id</code>. The merge code uses it to find the join column in each table. It also sets how close a fuzzy match must be: 0.72 against a known name, 0.6 between two raw names, with that second kind capped at 0.8 confidence. To teach it a new alias, add it to the dictionary.</p>
+        </article>
+        <article class="file" id="f-hmis-indicators">
+          <div class="fhead"><h3>hmis_indicators.py + .tsv</h3><span class="loc">50 lines + 198 indicators</span></div>
+          <p>HMIS reports name indicators in long sentences that change punctuation from year to year. This maps each one to a short code, its programme and its grouping. <code>lookup(label)</code> matches on a cleaned-up version of the label, so "Sterlisation" and "Sterilisation" still match.</p>
+          <pre>indicator                                           variable  programme        grouping
+Total number of pregnant women Registered for ANC   anc_reg   Maternal Health  RMNCH+A</pre>
+        </article>
+        <article class="file" id="f-kpi-catalog">
+          <div class="fhead"><h3>kpi_catalog.py + .tsv</h3><span class="loc">288 lines + 227 indicators</span></div>
+          <p>The 227 indicators of the report template (<code>General_Population_Template.xlsx</code>) in 8 themes: RMNCH 41, NCDs 35, Socio-economic 32, Communicable diseases 31, HRH 24, Demographic 24, Infrastructure 22, Nutrition 18. The <code>.tsv</code> holds the template's own text (name, definition, source). <code>FORMULAS</code> in the <code>.py</code> says how to calculate each one from <code>dashboard_master</code>. An indicator with no formula is reported as unavailable, with a reason such as "NFHS-5 district factsheets are not ingested".</p>
+        </article>
+        <article class="file" id="f-dashboard-kpis">
+          <div class="fhead"><h3>dashboard_kpis.py</h3><span class="loc">181 lines</span></div>
+          <p>The 28 fixed dashboard cards, KPI-01 to KPI-28 (KPI-01 is Total Population). Each has a fixed column or formula and an aggregation kind, so a card shows the same number on every run. Column names ending <code>_census</code> come from Census, <code>_hmis</code> from HMIS.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= sources/ ================= -->
+    <section class="mod" id="sources" data-title="modules/sources/ registry seed">
+      <h2><span class="path">app/modules/</span>sources/</h2>
+      <p class="intro">The list of known data sources, so a source can be registered once and run again any time.</p>
+      <div class="files">
+        <article class="file" id="f-seed">
+          <div class="fhead"><h3>seed_sources.json</h3><span class="loc">14 sources</span></div>
+          <p>Ready-made sources loaded on every start: 5 Census pulls (<code>census_india</code>), 2 single data.gov.in resources (<code>data_gov_in</code>) and 7 data.gov.in catalogs (<code>data_gov_catalog</code>). Adding a source means adding an entry here; no code changes.</p>
+          <pre>{
+  "name": "Census 2011 - All India districts (PCA)",
+  "connector": "census_india",
+  "config": {"level": "district", "urbrur": 0, "census_year": 2011},
+  "geo_level": "district",
+  "theme": "Demographic",
+  ...
+}</pre>
+        </article>
+        <article class="file" id="f-sources-service">
+          <div class="fhead"><h3>service.py</h3><span class="loc">154 lines</span></div>
+          <dl class="parts">
+            <dt>seed_sources()</dt><dd>Loads the JSON file into the <code>sources</code> table, skipping names already present.</dd>
+            <dt>run_source()</dt><dd>Fetches one source and immediately makes a cleaned copy, so every source ends up in a comparable state.</dd>
+            <dt>run_all()</dt><dd>Runs every enabled source (or one theme). A failure is recorded and the rest continue.</dd>
+          </dl>
+        </article>
+        <article class="file" id="f-sources-router">
+          <div class="fhead"><h3>router.py</h3><span class="loc">60 lines</span></div>
+          <div class="routes-wrap"><table class="routes">
+            <tr><td class="m get">GET</td><td>/sources</td><td>List sources, optionally by theme</td></tr>
+            <tr><td class="m post">POST</td><td>/sources</td><td>Register a new source</td></tr>
+            <tr><td class="m post">POST</td><td>/sources/seed</td><td>Load seed_sources.json again</td></tr>
+            <tr><td class="m post">POST</td><td>/sources/{id}/run</td><td>Run one source as a background job</td></tr>
+            <tr><td class="m post">POST</td><td>/sources/run-all</td><td>Run every enabled source as one job</td></tr>
+          </table></div>
+        </article>
+        <article class="file" id="f-sources-schemas">
+          <div class="fhead"><h3>schemas.py</h3><span class="loc">34 lines</span></div>
+          <p><code>SourceIn</code> is what you send to register a source. <code>SourceOut</code> is what comes back: the same fields plus id, last run time, status, error and last dataset.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= jobs/ ================= -->
+    <section class="mod" id="jobs" data-title="modules/jobs/ background worker queue">
+      <h2><span class="path">app/modules/</span>jobs/</h2>
+      <p class="intro">Runs slow work in the background so web requests can answer straight away. A national Census pull is about 33 API calls; an HMIS crawl can take hours.</p>
+      <div class="files">
+        <article class="file" id="f-jobs-service">
+          <div class="fhead"><h3>service.py</h3><span class="tag key">Start here</span><span class="loc">347 lines</span></div>
+          <dl class="parts">
+            <dt>enqueue()</dt><dd>Saves a <code>Job</code> row as "queued" and hands it to a pool of 2 worker threads. Two at a time also keeps the load on government websites low.</dd>
+            <dt>_run()</dt><dd>What each worker runs. It opens its own database session, marks the job running and calls the function for that job type. Any error marks the job failed instead of crashing the server.</dd>
+            <dt>_run_hmis_crawl_job()</dt><dd>Splits the HMIS report tree into branches and queues one child fetch job per branch, listed in <code>result["children"]</code>.</dd>
+            <dt>_run_fetch_job(), _run_merge_job(), …</dt><dd>One function per job type, each calling the matching module's service.</dd>
+            <dt>reap_orphaned_jobs()</dt><dd>Runs at startup and fails jobs left "running" by a server that stopped.</dd>
+          </dl>
+          <div class="snip-label">The six job types, inside _run()</div>
+          <pre>if job.job_type == "source_run":
+    _run_source_job(db, job)
+elif job.job_type == "source_run_all":
+    _run_all_job(db, job)
+elif job.job_type == "fetch":
+    _run_fetch_job(db, job, payload or {})
+elif job.job_type == "merge":
+    _run_merge_job(db, job, payload or {})
+elif job.job_type == "merge_clean":
+    _run_merge_clean_job(db, job, payload or {})
+elif job.job_type == "hmis_crawl":
+    _run_hmis_crawl_job(db, job, payload or {})</pre>
+        </article>
+        <article class="file" id="f-jobs-router">
+          <div class="fhead"><h3>router.py</h3><span class="loc">26 lines</span></div>
+          <div class="routes-wrap"><table class="routes">
+            <tr><td class="m get">GET</td><td>/jobs</td><td>Recent jobs, optionally by status</td></tr>
+            <tr><td class="m get">GET</td><td>/jobs/{id}</td><td>One job's status and progress (what clients poll)</td></tr>
+          </table></div>
+        </article>
+        <article class="file" id="f-jobs-schemas">
+          <div class="fhead"><h3>schemas.py</h3><span class="loc">20 lines</span></div>
+          <p><code>JobOut</code>: the job as returned to the client, with the same fields as the <code>Job</code> table.</p>
+        </article>
+        <article class="file" id="f-jobs-lineage">
+          <div class="fhead"><h3>lineage.py</h3><span class="loc">32 lines</span></div>
+          <p><code>dataset_ids_for_job()</code> finds every dataset a job produced. A crawl job produces none itself, so it follows the job's children (up to 5 levels deep). Used to export "everything this job fetched".</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= ingestion/ ================= -->
+    <section class="mod" id="ingestion" data-title="modules/ingestion/ fetch upload probe">
+      <h2><span class="path">app/modules/</span>ingestion/</h2>
+      <p class="intro">Getting data in. The router accepts requests, the detector decides how to read a URL, the connectors (next folder) do the reading, and the service saves the result.</p>
+      <div class="files">
+        <article class="file" id="f-ingestion-router">
+          <div class="fhead"><h3>router.py</h3><span class="loc">114 lines</span></div>
+          <div class="routes-wrap"><table class="routes">
+            <tr><td class="m post">POST</td><td>/ingest/fetch</td><td>The main entry point. Starts a fetch job and returns its id (202).</td></tr>
+            <tr><td class="m post">POST</td><td>/ingest/probe</td><td>Reports which ways a URL can be read, and which is best</td></tr>
+            <tr><td class="m post">POST</td><td>/ingest/url</td><td>Fetches a URL immediately, without a job</td></tr>
+            <tr><td class="m post">POST</td><td>/ingest/upload</td><td>Uploads a CSV or Excel file</td></tr>
+            <tr><td class="m get">GET</td><td>/connectors</td><td>Lists the available connectors</td></tr>
+            <tr><td class="m get">GET</td><td>/census/districts</td><td>State and district codes for the Census API</td></tr>
+            <tr><td class="m get">GET</td><td>/census/geosearch</td><td>Finds a Census area code by name</td></tr>
+          </table></div>
+        </article>
+        <article class="file" id="f-ingestion-schemas">
+          <div class="fhead"><h3>schemas.py</h3><span class="loc">135 lines</span></div>
+          <p><code>FetchRequest</code> is one request shape for every kind of fetch: <code>survey_id</code>, <code>type</code> (api, csv or html), <code>url</code>, <code>name</code>, plus Census options (<code>level</code>, <code>state</code>, <code>district</code>, <code>urbrur</code> for total/rural/urban, <code>verify_ssl</code>) and HMIS options (<code>path</code>, <code>max_files_per_chunk</code>, <code>file_pattern</code>, <code>crawl</code>, <code>refresh</code>). Also <code>IngestUrlRequest</code>, <code>ProbeRequest</code> and the Census levels: district, subdistrict, village_town, ward.</p>
+        </article>
+        <article class="file" id="f-ingestion-service">
+          <div class="fhead"><h3>service.py</h3><span class="tag key">Start here</span><span class="loc">380 lines</span></div>
+          <dl class="parts">
+            <dt>run_fetch()</dt><dd>Looks at the URL's host and picks a path. <code>censusindia.gov.in</code> goes to <code>_run_census_fetch()</code>; <code>hmis.mohfw.gov.in</code> goes to <code>_run_hmis_fetch()</code>; anything else goes through a regular connector into its own <code>ds_&lt;id&gt;</code> table plus a cleaned copy.</dd>
+            <dt>_run_census_fetch()</dt><dd>Streams a Census pull chunk by chunk into <code>census_raw</code>. It skips the full cleaning pass to keep memory use flat.</dd>
+            <dt>_run_hmis_fetch()</dt><dd>Crawls the HMIS report tree one folder at a time into <code>hmis_raw</code>.</dd>
+            <dt>ingest_from_url(), ingest_from_upload()</dt><dd>Pick a connector (or use the one you named) and read the source.</dd>
+            <dt>ingest_with_params()</dt><dd>Runs a registered source from its saved <code>config</code>.</dd>
+            <dt>store_result(), store_clean_copy()</dt><dd>Save the table and the raw file; then save a cleaned copy linked to it.</dd>
+          </dl>
+        </article>
+        <article class="file" id="f-detector">
+          <div class="fhead"><h3>detector.py</h3><span class="loc">183 lines</span></div>
+          <p>Decides how to read a URL. It tries the most reliable method first and never starts with a browser:</p>
+          <ol style="margin:0;padding-left:22px;max-width:70ch">
+            <li>Official API (known hosts <code>censusindia.gov.in</code>, <code>api.data.gov.in</code>)</li>
+            <li>Downloadable CSV or Excel</li>
+            <li>Raw JSON or XML</li>
+            <li>HTML table on the page</li>
+            <li>JavaScript-rendered page</li>
+          </ol>
+          <p>A page that links to a CSV counts as a file source. <code>detect_connector()</code> makes the choice; <code>probe_url()</code> reports what is actually available.</p>
+        </article>
+        <article class="file" id="f-cleanup">
+          <div class="fhead"><h3>cleanup.py</h3><span class="loc">129 lines</span></div>
+          <p>Deletes downloaded files once their rows are safely in the database (when <code>PLATFORM_DELETE_SOURCE_FILES_AFTER_INGEST</code> is true, the default). It deletes the bulky <code>.xls</code>/<code>.csv</code> but keeps the small <code>.meta.json</code> beside it, which records the server's date, size and checksum: the proof of which version of a report produced a row. Functions: <code>purge_hmis_branch()</code>, <code>purge_raw_file()</code>, <code>purge_all()</code>.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= connectors/ ================= -->
+    <section class="mod" id="connectors" data-title="modules/ingestion/connectors/ census hmis data.gov.in">
+      <h2><span class="path">app/modules/ingestion/</span>connectors/</h2>
+      <p class="intro">One file per kind of source. Each returns an <code>IngestResult</code>: a table plus a record of where it came from. They deliberately share no code, so a fix to web-page reading can never break an API pull.</p>
+      <div class="files">
+        <article class="file" id="f-conn-base">
+          <div class="fhead"><h3>base.py</h3><span class="loc">23 lines</span></div>
+          <p>The shared result type. <code>IngestResult</code> holds <code>dataframe</code>, <code>connector</code>, <code>source_ref</code>, <code>raw_bytes</code>, <code>raw_filename</code> and <code>warnings</code>. <code>ConnectorError</code> is raised when a source can't be read.</p>
+        </article>
+        <article class="file" id="f-census-india">
+          <div class="fhead"><h3>census_india.py</h3><span class="tag key">Start here</span><span class="loc">405 lines</span></div>
+          <p>Census 2011 Primary Census Abstract: population, literacy, workers and so on. The Census "Population Finder" web page is a JavaScript app, so instead of scraping it, this calls the data API behind it directly.</p>
+          <pre>{API}/tables/data/2011/PC11_PCA-TV/255?_source=dt&amp;labels=indicator
+    &amp;state=&lt;id&gt;&amp;district=&lt;id&gt;&amp;geo_level=&lt;2..5&gt;</pre>
+          <dl class="parts">
+            <dt>ingest()</dt><dd>Fetches 5,000 records per page, retrying up to 4 times. Levels: district, subdistrict, village/town, ward. The API has no state level, so state figures are added up from districts.</dd>
+            <dt>iter_chunks(), plan_chunks()</dt><dd>Split big pulls into pieces (subdistricts one state at a time, villages one district at a time) so memory stays flat.</dd>
+            <dt>_pivot()</dt><dd>The API returns one value per row; this turns it into one row per place, one column per indicator.</dd>
+            <dt>geosearch(), list_districts()</dt><dd>Look up area codes by name, or list every district.</dd>
+          </dl>
+        </article>
+        <article class="file" id="f-hmis-reports">
+          <div class="fhead"><h3>hmis_reports.py</h3><span class="tag key">Start here</span><span class="loc">751 lines, the largest file</span></div>
+          <p>HMIS health service reports. The HMIS site is also a JavaScript app; this calls its two hidden endpoints directly. No login is needed.</p>
+          <pre>GET getFiles?fpath=&lt;base64(path)&gt;       <span class="c"># folder listing, as JSON</span>
+GET downloadfiles?filepath=&lt;urlencoded&gt;  <span class="c"># the file itself</span></pre>
+          <dl class="parts">
+            <dt>walk(), list_directory()</dt><dd>Go through the "Standard Reports" folder tree.</dd>
+            <dt>cached_download(), is_cached()</dt><dd>Save each file under <code>data/raw/hmis/&lt;survey&gt;/</code> with a <code>.meta.json</code>, and skip files that haven't changed on the server.</dd>
+            <dt>parse_report_long()</dt><dd>Reads one report into rows of place, indicator, year and value. The <code>.xls</code> files are really HTML tables.</dd>
+            <dt>to_record_rows()</dt><dd>Folds those rows back into one row per place per period, with indicators as columns.</dd>
+            <dt>plan_branches()</dt><dd>Splits a crawl by report type, year or period. By default: report F.1 (Performance of Key HMIS Indicators, district level), last 2 years.</dd>
+            <dt>path_dimensions()</dt><dd>Reads report type, year and period out of the file's folder path.</dd>
+          </dl>
+        </article>
+        <article class="file" id="f-datagov">
+          <div class="fhead"><h3>data_gov_in.py</h3><span class="loc">140 lines</span></div>
+          <p>One data.gov.in resource, by its id or a URL containing it. It fetches 1,000 records at a time and retries up to 3 times, because this API often times out or limits how fast you can call it.</p>
+          <p class="note"><b>Heads-up.</b> The API key comes only from the terminal environment (<code>DATA_GOV_IN_API_KEY</code>), not from <code>.env</code>. Without it, the code uses the shared public sample key, which gets blocked almost at once.</p>
+        </article>
+        <article class="file" id="f-datagov-catalog">
+          <div class="fhead"><h3>data_gov_catalog.py</h3><span class="loc">156 lines</span></div>
+          <p>A data.gov.in <em>catalog</em>: many resources that together form one dataset. (On data.gov.in, HMIS is one resource per district per month.) It lists the catalog's resources, fetches each one, stacks them and tags every row with its resource. If some fail, it keeps the ones that worked.</p>
+        </article>
+        <article class="file" id="f-rest-api">
+          <div class="fhead"><h3>rest_api.py</h3><span class="loc">61 lines</span></div>
+          <p>Any JSON API. It finds the first list in the reply (directly, or under a key like <code>records</code>, <code>data</code>, <code>results</code>, <code>items</code>, <code>rows</code>, <code>value</code>) and flattens it into a table.</p>
+        </article>
+        <article class="file" id="f-csv-excel">
+          <div class="fhead"><h3>csv_excel.py</h3><span class="loc">64 lines</span></div>
+          <p>CSV, TSV and Excel files, either uploaded or from a direct download link. It only checks that the file reads as a table that isn't empty; deeper checks happen later.</p>
+        </article>
+        <article class="file" id="f-html-table">
+          <div class="fhead"><h3>html_table.py</h3><span class="loc">92 lines</span></div>
+          <p>Ordinary web pages with a <code>&lt;table&gt;</code>. If the page has several tables, it picks the biggest (rows × columns). You can pick another with <code>table_index</code>.</p>
+        </article>
+        <article class="file" id="f-dynamic-site">
+          <div class="fhead"><h3>dynamic_site.py</h3><span class="tag stub">Not built</span><span class="loc">34 lines</span></div>
+          <p>For pages that only show their data after JavaScript runs. It is a placeholder that raises an error. Its comments describe the plan: drive a headless browser (Playwright) and either capture the data calls the page makes or read the table once it appears.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= cleaning/ ================= -->
+    <section class="mod" id="cleaning" data-title="modules/cleaning/ clean nulls duplicates">
+      <h2><span class="path">app/modules/</span>cleaning/</h2>
+      <div class="files">
+        <article class="file" id="f-cleaning">
+          <div class="fhead"><h3>service.py</h3><span class="tag key">Start here</span><span class="loc">195 lines</span></div>
+          <p>Fixes bad values without changing the table's layout. Each step can be chosen on its own, and each reports what it changed, so a clean is never a black box. <code>clean_dataframe(df, operations)</code> runs the chosen steps.</p>
+          <dl class="parts">
+            <dt>standardize_columns</dt><dd>Column names to snake_case.</dd>
+            <dt>trim_whitespace</dt><dd>Removes stray spaces.</dd>
+            <dt>normalize_nulls</dt><dd>Turns "NA", "n/a", "null", "-", "nil", "not available" and similar into real blanks.</dd>
+            <dt>drop_empty_columns, drop_empty_rows</dt><dd>Remove columns or rows with nothing in them.</dd>
+            <dt>coerce_numeric</dt><dd>Turns numbers stored as text into real numbers.</dd>
+            <dt>drop_duplicates</dt><dd>Removes repeated rows.</dd>
+            <dt>standardize_case, standardize_states</dt><dd>Optional extras: merge values that differ only in capitals, and apply the official state spellings.</dd>
+          </dl>
+          <p>The shared Census and HMIS tables skip <code>drop_empty_columns</code>, because a column empty in one batch may be filled in another.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= profiling/ ================= -->
+    <section class="mod" id="profiling" data-title="modules/profiling/ column statistics">
+      <h2><span class="path">app/modules/</span>profiling/</h2>
+      <div class="files">
+        <article class="file" id="f-profiling">
+          <div class="fhead"><h3>service.py</h3><span class="loc">61 lines</span></div>
+          <p><code>profile_dataframe()</code> produces statistics for each column: type, number of blanks, distinct values, most common values and a few samples. It is used for dataset summaries and as the description of the data sent to Claude. Claude sees this summary and a few sample rows, never the database.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= census_warehouse/ ================= -->
+    <section class="mod" id="census-warehouse" data-title="modules/census_warehouse/ census_raw census_clean census_master">
+      <h2><span class="path">app/modules/</span>census_warehouse/</h2>
+      <p class="intro">The three shared Census tables: <code>census_raw</code> (everything as fetched), <code>census_clean</code> (cleaned) and <code>census_master</code> (one final row per place).</p>
+      <div class="files">
+        <article class="file" id="f-census-schema">
+          <div class="fhead"><h3>schema.py</h3><span class="loc">63 lines</span></div>
+          <p>Names the three tables and their columns. Bookkeeping columns on every row: <code>_dataset_id</code>, <code>_ingested_at</code>, <code>survey_id</code>, <code>level</code>. Geography columns cover every level; the ones that don't apply stay empty (a district row has no village). <code>GRAIN</code> says what identifies a row at each level, such as <code>(state, district)</code> for districts. <code>is_layer_table()</code> tells these shared tables apart from <code>ds_&lt;id&gt;</code> tables.</p>
+        </article>
+        <article class="file" id="f-census-service">
+          <div class="fhead"><h3>service.py</h3><span class="tag key">Start here</span><span class="loc">385 lines</span></div>
+          <dl class="parts">
+            <dt>build_clean()</dt><dd><code>census_raw</code> to <code>census_clean</code> with the standard cleaning steps, adding state and district ids from the district master.</dd>
+            <dt>build_master()</dt><dd><code>census_clean</code> to <code>census_master</code>, keeping only the most recent row per place per survey. A re-fetch therefore corrects the old figures instead of duplicating them.</dd>
+            <dt>export_layer(), export_all()</dt><dd>Write CSVs: one per level, with villages split by state.</dd>
+            <dt>summary()</dt><dd>Row counts by level for each table.</dd>
+            <dt>backfill()</dt><dd>Copies old per-dataset Census tables into <code>census_raw</code>.</dd>
+          </dl>
+          <div class="snip-label">The step that makes master correct, inside build_master()</div>
+          <pre>key = [c for c in (S.SURVEY_COL, *S.MASTER_KEY) if c in df.columns]
+<span class="c"># oldest first, keep the last copy of each place = the newest fetch</span>
+df = df.sort_values(S.INGESTED_COL).drop_duplicates(subset=key, keep="last")</pre>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= hmis_warehouse/ ================= -->
+    <section class="mod" id="hmis-warehouse" data-title="modules/hmis_warehouse/ hmis_raw hmis_clean hmis_master">
+      <h2><span class="path">app/modules/</span>hmis_warehouse/</h2>
+      <p class="intro">The same three stages for HMIS: <code>hmis_raw</code>, <code>hmis_clean</code>, <code>hmis_master</code>.</p>
+      <div class="files">
+        <article class="file" id="f-hmis-schema">
+          <div class="fhead"><h3>schema.py</h3><span class="loc">61 lines</span></div>
+          <p>Columns: bookkeeping (<code>_dataset_id</code>, <code>_ingested_at</code>, <code>survey_id</code>), where the row came from (<code>report_type</code>, <code>report_year</code>, <code>period</code>, <code>parent_area</code>, <code>source_file</code>) and the place (<code>level</code>, <code>area</code>, state and district names and ids, <code>unique_id</code>). <code>WIDE_INDEX</code> is what makes one row unique: the place, report year, period and metric year.</p>
+          <p class="note"><b>Heads-up.</b> The description at the top of this file still says rows are "long" (one row per indicator). That is out of date: rows are now one per place per period, with indicators as columns.</p>
+        </article>
+        <article class="file" id="f-hmis-service">
+          <div class="fhead"><h3>service.py</h3><span class="tag key">Start here</span><span class="loc">421 lines</span></div>
+          <dl class="parts">
+            <dt>build_clean()</dt><dd>Cleans one dataset at a time to keep memory low, and adds district ids.</dd>
+            <dt>build_master()</dt><dd>Keeps the newest row per place and period. This matters for HMIS because each year's report repeats last year's figures for comparison, so the same number arrives twice and only the newest publication should count.</dd>
+            <dt>summary(), export_layer(), backfill()</dt><dd>Counts, CSV export (one file per report year, readable in Excel) and copying old tables in, as in the Census version.</dd>
+          </dl>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= warehouse/ ================= -->
+    <section class="mod" id="warehouse" data-title="modules/warehouse/ rebuild clean master export">
+      <h2><span class="path">app/modules/</span>warehouse/</h2>
+      <div class="files">
+        <article class="file" id="f-warehouse-router">
+          <div class="fhead"><h3>router.py</h3><span class="loc">188 lines</span></div>
+          <p>One set of web addresses that works for both Census and HMIS: <code>/warehouse/census/…</code> and <code>/warehouse/hmis/…</code>. This works because both services offer functions with the same names. To add a third warehouse, write a service and schema with those functions and add them to <code>_CONNECTORS</code>.</p>
+          <pre>_CONNECTORS = {
+    Connector.census: (census_service, census_schema),
+    Connector.hmis: (hmis_service, hmis_schema),
+}</pre>
+          <div class="routes-wrap"><table class="routes">
+            <tr><td class="m get">GET</td><td>/warehouse/{c}</td><td>Row counts for raw, clean and master</td></tr>
+            <tr><td class="m post">POST</td><td>/warehouse/{c}/rebuild</td><td>Clean, then master. The usual step after a fetch.</td></tr>
+            <tr><td class="m post">POST</td><td>/warehouse/{c}/clean</td><td>Rebuild only the clean table</td></tr>
+            <tr><td class="m post">POST</td><td>/warehouse/{c}/master</td><td>Rebuild only the master table</td></tr>
+            <tr><td class="m post">POST</td><td>/warehouse/{c}/export</td><td>Write the tables to CSV</td></tr>
+            <tr><td class="m get">GET</td><td>/warehouse/{c}/rows</td><td>Browse rows, with filters</td></tr>
+          </table></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= datasets/ ================= -->
+    <section class="mod" id="datasets" data-title="modules/datasets/ browse">
+      <h2><span class="path">app/modules/</span>datasets/</h2>
+      <div class="files">
+        <article class="file" id="f-datasets-router">
+          <div class="fhead"><h3>router.py</h3><span class="loc">37 lines</span></div>
+          <p>Browse the per-dataset tables and their descriptions.</p>
+          <div class="routes-wrap"><table class="routes">
+            <tr><td class="m get">GET</td><td>/datasets</td><td>All datasets, optionally by stage</td></tr>
+            <tr><td class="m get">GET</td><td>/datasets/{id}</td><td>One dataset's description</td></tr>
+            <tr><td class="m get">GET</td><td>/datasets/{id}/rows</td><td>Its rows, one page at a time</td></tr>
+          </table></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= merging/ ================= -->
+    <section class="mod" id="merging" data-title="modules/merging/ merge join dashboard_master">
+      <h2><span class="path">app/modules/</span>merging/</h2>
+      <p class="intro">Puts Census and HMIS side by side, so you can calculate rates such as deliveries per 1,000 people. The output is <code>dashboard_master</code>.</p>
+      <div class="files">
+        <article class="file" id="f-merging-router">
+          <div class="fhead"><h3>router.py</h3><span class="loc">154 lines</span></div>
+          <div class="routes-wrap"><table class="routes">
+            <tr><td class="m post">POST</td><td>/datasets/merge</td><td>Merge a survey's sources as a background job</td></tr>
+            <tr><td class="m get">GET</td><td>/datasets/merge</td><td>Read the merged rows for a survey</td></tr>
+            <tr><td class="m post">POST</td><td>/datasets/merge/clean</td><td>Re-clean dashboard_master as a job</td></tr>
+            <tr><td class="m get">GET</td><td>/datasets/merge/clean</td><td>Read the re-cleaned rows</td></tr>
+          </table></div>
+        </article>
+        <article class="file" id="f-merging-schemas">
+          <div class="fhead"><h3>schemas.py</h3><span class="loc">85 lines</span></div>
+          <p><code>MergeRequest</code>: either a <code>survey_id</code> with the sources to join (such as census and hmis), or a list of <code>dataset_ids</code>, never both. Optional <code>join_key</code> and <code>name</code>. <code>DashboardCleanRequest</code>: which cleaning steps to re-run.</p>
+        </article>
+        <article class="file" id="f-merging-run">
+          <div class="fhead"><h3>run.py</h3><span class="loc">191 lines</span></div>
+          <p>What the merge job runs. <code>run_merge()</code> loads each source's master rows for the survey, joins them, cleans the result and writes <code>dashboard_master</code>. <code>run_clean()</code> re-cleans <code>dashboard_master</code>. These are jobs because joining large tables took minutes, and the proxy gave up (503 error) when it ran inside the request.</p>
+        </article>
+        <article class="file" id="f-merging-survey">
+          <div class="fhead"><h3>survey.py</h3><span class="loc">127 lines</span></div>
+          <p>Survey-level helpers: <code>available_connectors()</code> (which warehouses hold rows for this survey), <code>load_master()</code>, <code>load_dashboard()</code>, <code>replace_survey()</code> and <code>clear_dashboard()</code>. It always joins the <em>master</em> tables. Raw and clean hold several fetches of the same district and would multiply rows.</p>
+        </article>
+        <article class="file" id="f-merging-service">
+          <div class="fhead"><h3>service.py</h3><span class="loc">153 lines</span></div>
+          <p><code>merge_dataframes()</code> does the actual join. With a join key, it finds that column in each table and joins them, keeping rows that exist in either. Without a key, it tries state, district, block and year in turn. If nothing matches, it stacks the tables one under the other. Key values are lower-cased before matching.</p>
+        </article>
+        <article class="file" id="f-semantic">
+          <div class="fhead"><h3>semantic.py</h3><span class="loc">72 lines</span></div>
+          <p>Works out which column means what, so "District", <code>dist_name</code> and <code>DISTRICT_NM</code> are recognised as the same thing. Three tiers, most trusted first: exact alias from <code>canonical_fields</code> (confidence 1.0), fuzzy match to a known name, fuzzy match between raw column names (at most 0.8). It uses Python's built-in <code>difflib</code>, not AI.</p>
+        </article>
+        <article class="file" id="f-merging-schema">
+          <div class="fhead"><h3>schema.py</h3><span class="loc">33 lines</span></div>
+          <p>Names <code>dashboard_master</code> and its bookkeeping columns in the same form as the Census and HMIS schemas, so the shared code (stamping rows, reading rows, replacing a survey) treats it the same way.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= analytics/ ================= -->
+    <section class="mod" id="analytics" data-title="modules/analytics/ safe computations">
+      <h2><span class="path">app/modules/</span>analytics/</h2>
+      <div class="files">
+        <article class="file" id="f-analytics">
+          <div class="fhead"><h3>service.py</h3><span class="loc">96 lines</span></div>
+          <p>A small fixed menu of safe calculations: <code>aggregate</code> (group, then sum, mean, count, min, max, median or distinct count), <code>top_n</code>, <code>correlation</code> and <code>describe</code>. When Claude proposes a KPI it can only choose from this menu, so a prompt can never turn into running arbitrary code. A bad request returns an error message instead of failing the whole answer.</p>
+          <pre>spec_type = spec.get("type")
+if spec_type == "aggregate":   ...
+if spec_type == "top_n":       ...
+if spec_type == "correlation": ...
+if spec_type == "describe":    ...
+return {"ok": False, "error": f"Unknown computation type '{spec_type}'."}</pre>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= kpi/ ================= -->
+    <section class="mod" id="kpi" data-title="modules/kpi/ indicators claude dashboard">
+      <h2><span class="path">app/modules/</span>kpi/</h2>
+      <p class="intro">Calculates indicators. Three kinds: the template's 227, the 28 dashboard cards, and ones Claude suggests. In every case pandas does the arithmetic, never the AI.</p>
+      <div class="files">
+        <article class="file" id="f-kpi-router">
+          <div class="fhead"><h3>router.py</h3><span class="loc">551 lines</span></div>
+          <div class="routes-wrap"><table class="routes">
+            <tr><td class="m get">GET</td><td>/kpi/catalog</td><td>The 227 template indicators, by theme or availability</td></tr>
+            <tr><td class="m post">POST</td><td>/kpi/compute</td><td>Calculate the template indicators for a survey, district by district</td></tr>
+            <tr><td class="m get">GET</td><td>/kpi/dashboard</td><td>The 28 cards, overall or per district</td></tr>
+            <tr><td class="m post">POST</td><td>/kpi/aggregate</td><td>Dashboard-defined KPIs with filters, grouping and time periods</td></tr>
+            <tr><td class="m post">POST</td><td>/kpi/dimensions</td><td>What a dashboard can filter on</td></tr>
+            <tr><td class="m post">POST</td><td>/kpi/generate</td><td>Claude studies the merged data and proposes ranked KPIs</td></tr>
+            <tr><td class="m post">POST</td><td>/kpi</td><td>Ask in words; Claude picks calculations, the backend runs them</td></tr>
+            <tr><td class="m get">GET</td><td>/kpi, /kpi/{id}</td><td>Past KPI questions and their results</td></tr>
+          </table></div>
+        </article>
+        <article class="file" id="f-kpi-aggregation">
+          <div class="fhead"><h3>aggregation.py</h3><span class="tag key">Start here</span><span class="loc">84 lines</span></div>
+          <p>The one adding-up rule every KPI follows. After the merge, a district's Census population is repeated on each of its HMIS rows, one per reporting period. Adding it up naively counted each district many times and gave India a population of about 4.4 billion instead of 1,210,854,977. The fix: a column ending <code>_census</code> is summed over one row per district; an HMIS column over all rows.</p>
+          <pre>def one_row_per_place(df):
+    for key in PLACE_KEYS:   <span class="c"># unique_id, district_id_census, district_name_census</span>
+        if key in df.columns:
+            return df.drop_duplicates(subset=[key])
+    return df
+
+def frame_for(df, column):
+    return one_row_per_place(df) if is_census(column) else df</pre>
+          <p><code>total()</code> and <code>ratio()</code> use this to add up and divide; <code>note()</code> writes a short explanation of how each value was reached.</p>
+        </article>
+        <article class="file" id="f-kpi-indicators">
+          <div class="fhead"><h3>indicators.py</h3><span class="loc">299 lines</span></div>
+          <dl class="parts">
+            <dt>compute()</dt><dd>Calculates every template indicator that has a formula, per district, from <code>dashboard_master</code>.</dd>
+            <dt>wide()</dt><dd>Lays the results out like the template's sheets: districts down the side, indicators across the top.</dd>
+            <dt>dashboard_snapshot(), dashboard_by_place()</dt><dd>The 28 cards, overall and per district.</dd>
+            <dt>SCALES</dt><dd>Per 100 (%), per 1,000, per 100,000.</dd>
+          </dl>
+        </article>
+        <article class="file" id="f-kpi-explorer">
+          <div class="fhead"><h3>explorer.py</h3><span class="loc">304 lines</span></div>
+          <p>Behind <code>/kpi/aggregate</code> and <code>/kpi/dimensions</code>. A dashboard sends KPI definitions (numerator and denominator columns, one aggregation from a fixed list, a scale) plus filters and grouping, and gets values overall and per group. Every column name is checked against the real data. Each column is added up over its own source's rows, the same rule as <code>aggregation.py</code>. At most 5,000 groups.</p>
+        </article>
+        <article class="file" id="f-kpi-dynamic">
+          <div class="fhead"><h3>dynamic.py</h3><span class="tag ai">Uses Claude</span><span class="loc">266 lines</span></div>
+          <p>Behind <code>/kpi/generate</code>. It shows Claude a summary of every column and asks for about ten ranked KPIs, each with an exact formula, a chart type and how filters should affect it (<code>KpiSpec</code>). Two safety checks follow: every column Claude names must exist in the data or the KPI is dropped, and the values are computed here in pandas.</p>
+        </article>
+        <article class="file" id="f-kpi-claude">
+          <div class="fhead"><h3>claude_client.py</h3><span class="tag ai">Uses Claude</span><span class="loc">142 lines</span></div>
+          <p>Calls Claude for <code>POST /kpi</code>. It sends the question, the column profile and a few sample rows, and gets back a <code>KpiProposal</code>: a short narrative plus KPIs, each with a calculation from the analytics menu. It uses structured output (<code>messages.parse()</code> with Pydantic models) so the answer always has the right shape. Without <code>ANTHROPIC_API_KEY</code> it raises <code>ClaudeNotConfigured</code>.</p>
+        </article>
+        <article class="file" id="f-kpi-service">
+          <div class="fhead"><h3>service.py</h3><span class="loc">24 lines</span></div>
+          <p><code>execute_proposal()</code> runs each calculation Claude proposed through <code>analytics.run_computation()</code>.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= reports/ ================= -->
+    <section class="mod" id="reports" data-title="modules/reports/ export csv pdf">
+      <h2><span class="path">app/modules/</span>reports/</h2>
+      <p class="intro">Files you can take away: CSV exports and a KPI PDF.</p>
+      <div class="files">
+        <article class="file" id="f-reports-router">
+          <div class="fhead"><h3>router.py</h3><span class="loc">209 lines</span></div>
+          <div class="routes-wrap"><table class="routes">
+            <tr><td class="m post">POST</td><td>/exports/csv</td><td>Write data to CSV under data/exports/, filtered by survey, stage, method or table</td></tr>
+            <tr><td class="m get">GET</td><td>/kpi/{id}/export/pdf</td><td>A PDF of one KPI request</td></tr>
+          </table></div>
+        </article>
+        <article class="file" id="f-reports-service">
+          <div class="fhead"><h3>service.py</h3><span class="loc">95 lines</span></div>
+          <p><code>build_csv_export()</code> writes CSV with a byte-order mark (an invisible marker at the start) so Excel shows Indian place names correctly. <code>write_csv_exports()</code> writes one file per dataset, in folders by acquisition method. <code>build_kpi_pdf()</code> makes the KPI report PDF.</p>
+          <p class="note"><b>Heads-up.</b> The description at the top of this file mentions an Excel export and <code>/datasets/{id}/aggregate</code>. Neither exists any more; only CSV and PDF are built.</p>
+        </article>
+        <article class="file" id="f-reports-naming">
+          <div class="fhead"><h3>naming.py</h3><span class="loc">88 lines</span></div>
+          <p>Keeps data from different acquisition methods in separate files, so you can always tell where a number came from: <code>api/</code> (Census, HMIS, data.gov.in, JSON APIs), <code>web/</code> (web pages), <code>file/</code> (CSV and Excel), <code>merged/</code>. File names follow <code>&lt;method&gt;__&lt;source&gt;__&lt;name&gt;__&lt;id&gt;.csv</code>.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= ai_data/ ================= -->
+    <section class="mod" id="ai-data" data-title="modules/ai_data/ gemini google">
+      <h2><span class="path">app/modules/</span>ai_data/</h2>
+      <p class="intro">Ask Google Gemini for a table in plain language. The answer is labelled as AI output and kept in four separate tables (<code>gemini_*</code>). It never goes into the official Census or HMIS tables or <code>dashboard_master</code>.</p>
+      <div class="files">
+        <article class="file" id="f-ai-router">
+          <div class="fhead"><h3>router.py</h3><span class="loc">302 lines</span></div>
+          <div class="routes-wrap"><table class="routes">
+            <tr><td class="m post">POST</td><td>/ai-data/fetch</td><td>Start a Gemini fetch; returns a fetch_id at once (202)</td></tr>
+            <tr><td class="m get">GET</td><td>/ai-data/fetches</td><td>Every fetch, newest first</td></tr>
+            <tr><td class="m get">GET</td><td>/ai-data/fetches/{id}</td><td>Progress, then the data once done</td></tr>
+            <tr><td class="m get">GET</td><td>/ai-data/fetches/{id}/download</td><td>The table as Gemini returned it</td></tr>
+            <tr><td class="m del">DELETE</td><td>/ai-data/fetches/{id}</td><td>Remove a bad answer and rebuild its survey</td></tr>
+            <tr><td class="m post">POST</td><td>/ai-data/rebuild</td><td>Rebuild clean and master from raw</td></tr>
+            <tr><td class="m get">GET</td><td>/ai-data/columns</td><td>Exact column names Gemini must use for one source</td></tr>
+            <tr><td class="m get">GET</td><td>/ai-data/indicators</td><td>What a survey holds, per source</td></tr>
+            <tr><td class="m get">GET</td><td>/ai-data/warehouse, …/rows</td><td>Counts and rows, same shape as /warehouse</td></tr>
+            <tr><td class="m get">GET</td><td>/ai-data/export</td><td>A survey's Gemini values as Excel or CSV</td></tr>
+          </table></div>
+        </article>
+        <article class="file" id="f-ai-service">
+          <div class="fhead"><h3>service.py</h3><span class="tag ai">Uses Gemini</span><span class="loc">462 lines</span></div>
+          <dl class="parts">
+            <dt>start_fetch()</dt><dd>Records the request and hands it to its own pool of 2 threads (separate from the jobs pool), then returns at once.</dd>
+            <dt>_fetch_units()</dt><dd>Splits a fetch into pieces (per year, per batch of columns). If an answer is too long or cut off, it halves the batch and tries again. The answers are combined into one table.</dd>
+            <dt>_save_values(), rebuild()</dt><dd>Store the answer and rebuild the survey's clean and master rows.</dd>
+            <dt>_with_status()</dt><dd>A fetch still "running" after 15 minutes is treated as lost to a server restart.</dd>
+            <dt>export_fetch(), export_survey()</dt><dd>Files for download, with an "About" sheet in Excel.</dd>
+          </dl>
+          <p>For a one-source fetch (census or hmis), Gemini must use that warehouse's exact column names. Every result carries the warning "AI-generated by Google Gemini. Not an official dataset…".</p>
+        </article>
+        <article class="file" id="f-ai-gemini">
+          <div class="fhead"><h3>gemini.py</h3><span class="tag ai">Uses Gemini</span><span class="loc">217 lines</span></div>
+          <p>Talks to the Gemini API over plain HTTP. Google Search grounding is on, so Gemini can look figures up and report which pages it used. It stays within <code>GEMINI_RPM</code> calls per minute, retries on errors 429, 500 and 503 using Google's suggested wait, and doesn't retry when a daily quota is used up. <code>parse_table()</code> pulls the JSON table out of the reply even if Gemini wrapped it in extra text.</p>
+        </article>
+        <article class="file" id="f-ai-store">
+          <div class="fhead"><h3>store.py</h3><span class="loc">409 lines</span></div>
+          <p>The four Gemini tables: <code>gemini_fetches</code> (one row per prompt), <code>gemini_raw</code> (each value as returned), <code>gemini_clean</code> and <code>gemini_master</code>. Values are stored one per row, because twenty prompts could name over a thousand columns and PostgreSQL allows at most 1,600 per table. It recognises state, district and year columns, matches place names to the district master, and <code>wide()</code> lays values back out as a normal table for viewing.</p>
+          <p class="note"><b>Heads-up.</b> Alembic's skip list doesn't include <code>gemini_</code> tables. An auto-generated migration would try to drop them, so always check generated migrations.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= alembic/ ================= -->
+    <section class="mod" id="alembic" data-title="alembic/ migrations">
+      <h2>alembic/</h2>
+      <p class="intro">Alembic creates and changes the five fixed tables. The data tables are not managed here.</p>
+      <div class="files">
+        <article class="file" id="f-alembic-env">
+          <div class="fhead"><h3>env.py</h3><span class="loc">79 lines</span></div>
+          <p>Alembic's settings. It reads the database address from the app's own settings. <code>include_object()</code> hides tables starting with <code>census_</code>, <code>hmis_</code>, <code>dashboard_</code> and <code>ds_</code> so Alembic doesn't try to drop them. <code>gemini_</code> is missing from that list.</p>
+        </article>
+        <article class="file" id="f-alembic-versions">
+          <div class="fhead"><h3>versions/</h3><span class="loc">3 migrations</span></div>
+          <p><code>e32fa9bdbdbf_baseline_schema.py</code> creates <code>datasets</code>, <code>profiles</code>, <code>sources</code>, <code>jobs</code> and <code>kpi_requests</code>. <code>bb39d46500ab_align_datasets_survey_id…</code> and <code>0ab4a9fd2016_kpi_requests_survey_id.py</code> add the <code>survey_id</code> columns. Apply them with <code>alembic upgrade head</code>.</p>
+        </article>
+        <article class="file" id="f-alembic-ini">
+          <div class="fhead"><h3>alembic.ini</h3></div>
+          <p>Alembic's config file, one folder up. Its database address (<code>sqlalchemy.url</code>) is left blank on purpose, because <code>env.py</code> supplies it.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= scripts ================= -->
+    <section class="mod" id="scripts" data-title="scripts standalone command line">
+      <h2>Scripts in <span class="path">platform/backend/</span></h2>
+      <p class="intro">Standalone tools you run from the terminal, without starting the server.</p>
+      <div class="files">
+        <article class="file" id="f-extract">
+          <div class="fhead"><h3>extract.py</h3><span class="loc">240 lines</span></div>
+          <p>One URL or file in, one CSV out. <code>--type api|file|web|auto</code> chooses the method; <code>auto</code> follows the same priority order as the detector. Use <code>census://districts?state=10</code> for Census.</p>
+        </article>
+        <article class="file" id="f-fetch-census">
+          <div class="fhead"><h3>fetch_census_by_state.py</h3><span class="loc">130 lines</span></div>
+          <p>Pulls Census one state at a time, one CSV per state, and can pick up where it stopped. Example: <code>--states 11,30 --level subdistrict</code>.</p>
+        </article>
+        <article class="file" id="f-build-levels">
+          <div class="fhead"><h3>build_census_levels.py</h3><span class="loc">126 lines</span></div>
+          <p>Adds up districts to make state and all-India rows (the Census API has neither) and checks that India totals 1,210,854,977.</p>
+        </article>
+        <article class="file" id="f-rebuild-hmis">
+          <div class="fhead"><h3>rebuild_hmis_raw.py</h3><span class="loc">183 lines</span></div>
+          <p>Rebuilds <code>hmis_raw</code> from the cached <code>.xls</code> files. Options: <code>--last 5</code>, <code>--dry-run</code>, <code>--truncate</code>. Only works if downloaded files were kept (<code>PLATFORM_DELETE_SOURCE_FILES_AFTER_INGEST=false</code>).</p>
+        </article>
+        <article class="file" id="f-migrate-pg">
+          <div class="fhead"><h3>migrate_sqlite_to_postgres.py</h3><span class="loc">60 lines</span></div>
+          <p>Copies the SQLite database into PostgreSQL. <code>--replace</code> overwrites tables that already exist.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= other ================= -->
+    <section class="mod" id="other" data-title="other files env data requirements">
+      <h2>Other files</h2>
+      <div class="files">
+        <article class="file" id="f-env">
+          <div class="fhead"><h3>.env and .env.example</h3></div>
+          <p>Your settings. <code>.env.example</code> lists them; <code>.env</code> holds your values and is not committed. Yours currently points the app at the local PostgreSQL database <code>platform</code>.</p>
+        </article>
+        <article class="file" id="f-requirements">
+          <div class="fhead"><h3>requirements.txt</h3></div>
+          <p>The Python packages to install (FastAPI, SQLAlchemy, pandas, Alembic and so on). Use Python 3.10 to 3.12; the pinned pandas has no ready-made install for newer versions.</p>
+        </article>
+        <article class="file" id="f-data-dir">
+          <div class="fhead"><h3>data/</h3></div>
+          <p>Where files land: <code>raw/</code> for downloads and the HMIS cache, <code>exports/</code> for CSV output in <code>api/</code>, <code>web/</code>, <code>file/</code> and <code>merged/</code> folders, and <code>warehouse/platform.db</code> for the SQLite database when PostgreSQL isn't set.</p>
+        </article>
+      </div>
+    </section>
+
+    <footer>Written from the code in <code>platform/backend/</code> as of 3 November 2026. Line counts include comments and blank lines.</footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  var q = document.getElementById('q');
+  var status = document.getElementById('status');
+  var empty = document.getElementById('empty');
+  var overview = document.getElementById('overview');
+  var toc = document.getElementById('toc');
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section.mod'));
+  var navLinks = {};
+  document.querySelectorAll('#nav a').forEach(function (a) { navLinks[a.getAttribute('href').slice(1)] = a; });
+
+  var total = document.querySelectorAll('article.file').length;
+  var texts = new Map();
+  document.querySelectorAll('article.file').forEach(function (f) { texts.set(f, f.textContent.toLowerCase()); });
+
+  function setCount(id, n) {
+    var a = navLinks[id];
+    if (!a) return;
+    var span = a.querySelector('.n');
+    if (span) span.textContent = n;
+    a.parentElement.hidden = n === 0;
+  }
+
+  function apply() {
+    var term = q.value.trim().toLowerCase();
+    var shown = 0;
+    sections.forEach(function (sec) {
+      var titleHit = term && (sec.dataset.title || '').toLowerCase().indexOf(term) !== -1;
+      var n = 0;
+      sec.querySelectorAll('article.file').forEach(function (f) {
+        var hit = !term || titleHit || texts.get(f).indexOf(term) !== -1;
+        f.hidden = !hit;
+        if (hit) n++;
+      });
+      var pkg = sec.querySelector('.pkg');
+      if (pkg) pkg.hidden = !!term;
+      sec.hidden = n === 0;
+      setCount(sec.id, n);
+      shown += n;
+    });
+    overview.hidden = !!term;
+    if (navLinks.overview) navLinks.overview.parentElement.hidden = !!term;
+    empty.hidden = shown > 0;
+    status.textContent = term
+      ? shown + ' of ' + total + ' files match “' + q.value.trim() + '”'
+      : total + ' files in ' + sections.length + ' folders';
+  }
+
+  q.addEventListener('input', apply);
+  q.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { q.value = ''; apply(); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === '/' && document.activeElement !== q && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault(); q.focus();
+    }
+  });
+
+  // Jumping to a folder while a search hides it: clear the search first.
+  Object.keys(navLinks).forEach(function (id) {
+    navLinks[id].addEventListener('click', function () {
+      var target = document.getElementById(id);
+      if (q.value && target && target.hidden) { q.value = ''; apply(); }
+      if (window.matchMedia('(max-width: 860px)').matches) toc.open = false;
+    });
+  });
+
+  // Collapse the folder list on phones so content starts near the top.
+  if (window.matchMedia('(max-width: 860px)').matches) toc.open = false;
+
+  // Highlight the folder currently on screen.
+  if ('IntersectionObserver' in window) {
+    var current = null;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          if (current) current.removeAttribute('aria-current');
+          current = navLinks[en.target.id] || null;
+          if (current) current.setAttribute('aria-current', 'true');
+        }
+      });
+    }, { rootMargin: '-15% 0px -75% 0px' });
+    sections.concat([overview]).forEach(function (s) { io.observe(s); });
+  }
+
+  apply();
+})();
+</script>
+</body>
+</html>

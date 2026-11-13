@@ -22,6 +22,12 @@ def dataset_ids_for_job(db: Session, job_id: str, _depth: int = 0) -> list[str]:
     if job.dataset_id:
         found.append(job.dataset_id)
 
+    # A Website-tab save makes several datasets in one job; each item names
+    # its clean dataset, the same one a fetch job points at.
+    for item in (job.result or {}).get("items") or []:
+        if isinstance(item, dict) and item.get("dataset_id"):
+            found.append(item["dataset_id"])
+
     if _depth < MAX_DEPTH:
         for child in (job.result or {}).get("children") or []:
             child_id = child.get("job_id") if isinstance(child, dict) else child
